@@ -52,9 +52,9 @@ bedside_status:
   verify_ssl: true
   footer_ip_left: true
   display_status_filter: 3
-  # Each pass = Bukys upload + update. Partial (0xDC) is faster; epd_full_update: true uses 0xF7 (~5s+) for darker ink.
-  # Raising epd_partial_passes multiplies time (e.g. 5 passes ≈ 5× BUSY); prefer passes: 1 and full_update if needed.
+  # Normal draws use partial (0xDC) — no full flash. Full (0xF7) is slow and blinks the whole panel.
+  # epd_full_refresh_on_boot: true   # one solid baseline after boot
+  # epd_full_refresh_every_minutes: 120  # optional periodic full (ghosting cleanup)
   epd_partial_passes: 1
-  # epd_full_update: true
   time_id: ha_time
   update_interval: 5s

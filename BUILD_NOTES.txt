@@ -20,7 +20,9 @@ that failure on stale Ninja rules.
 
 bedside_status: framebuffer is pushed with the same Bukys 792-wide interleaved SPI sequence as
 MicroPython crowpanel579_epd.display_bitmap (not Elecrow EPD_Display). Bytes are remapped 180° vs the
-Paint buffer so orientation matches the old Elecrow upload. epd_full_update: true uses waveform 0xF7
-for darker text (~5s+ per draw); epd_partial_passes multiplies upload+update time (default 1).
+Paint buffer so orientation matches the old Elecrow upload. Default draws use partial 0xDC only (no
+full-panel flash). Use epd_full_refresh_on_boot and/or epd_full_refresh_every_minutes for 0xF7 full
+refresh (~5s+ each). Removed epd_full_update (it refreshed fully every draw). epd_partial_passes
+multiplies partial upload+update when not doing a scheduled full.
 If YAML says that option is invalid, the add-on is using an old copy of the external
 component — set external_components refresh (e.g. 1h) or reinstall/update the git ref.

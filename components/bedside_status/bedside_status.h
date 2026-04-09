@@ -34,7 +34,8 @@ class BedsideStatus : public PollingComponent {
   void set_text_size(uint16_t v) { this->text_size_ = v; }
   void set_footer_text_size(uint16_t v) { this->footer_text_size_ = v; }
   void set_display_passes(uint8_t v) { this->display_passes_ = v; }
-  void set_epd_full_update(bool v) { this->epd_full_update_ = v; }
+  void set_epd_full_refresh_on_boot(bool v) { this->epd_full_refresh_on_boot_ = v; }
+  void set_epd_full_refresh_interval_ms(uint32_t v) { this->epd_full_refresh_interval_ms_ = v; }
 
  private:
   static BedsideStatus *epd_busy_parent_;
@@ -68,8 +69,12 @@ class BedsideStatus : public PollingComponent {
   uint16_t footer_text_size_{24};
   /** Repeat bitmap push + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
   uint8_t display_passes_{1};
-  /** If true, EPD_Update (0xF7) instead of EPD_PartUpdate (0xDC) — darker/solid, much slower (~5s+). */
-  bool epd_full_update_{false};
+  /** One full refresh (0xF7) on first paint after boot; then partial unless interval hits. */
+  bool epd_full_refresh_on_boot_{false};
+  /** If >0, run full refresh (0xF7) when this many ms have passed since last full (~5s+ each). */
+  uint32_t epd_full_refresh_interval_ms_{0};
+  bool epd_boot_full_refresh_done_{false};
+  uint32_t last_full_epd_refresh_ms_{0};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];

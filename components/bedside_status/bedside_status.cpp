@@ -402,17 +402,35 @@ void BedsideStatus::draw_status_screen_() {
     epd_draw_string_sized(ix, fy, clipped, fs, EPD_COLOR_BLACK);
   }
 
-  const uint8_t passes = this->display_passes_ == 0 ? 1 : this->display_passes_;
-  for (uint8_t p = 0; p < passes; p++) {
-    /* Elecrow EPD_Display targets a different RAM map than this panel; MicroPython uses Bukys interleave. */
-    EPD_DisplayBukys792From800(this->image_bw_);
-    if (this->epd_full_update_) {
-      EPD_Update();
-    } else {
-      EPD_PartUpdate();
+  const uint32_t now_ms = bedside_millis();
+  bool use_full_waveform = false;
+  if (this->epd_full_refresh_on_boot_ && !this->epd_boot_full_refresh_done_) {
+    use_full_waveform = true;
+    this->epd_boot_full_refresh_done_ = true;
+    this->last_full_epd_refresh_ms_ = now_ms;
+  } else if (this->epd_full_refresh_interval_ms_ > 0) {
+    if (this->last_full_epd_refresh_ms_ == 0) {
+      this->last_full_epd_refresh_ms_ = now_ms;
     }
-    if (p + 1 < passes) {
-      bedside_delay_ms(30);
+    const uint32_t elapsed = now_ms - this->last_full_epd_refresh_ms_;
+    if (elapsed >= this->epd_full_refresh_interval_ms_) {
+      use_full_waveform = true;
+      this->last_full_epd_refresh_ms_ = now_ms;
+    }
+  }
+
+  /* Full (0xF7) flashes the whole panel — only on boot/interval. Normal draws use partial (0xDC). */
+  if (use_full_waveform) {
+    EPD_DisplayBukys792From800(this->image_bw_);
+    EPD_Update();
+  } else {
+    const uint8_t passes = this->display_passes_ == 0 ? 1 : this->display_passes_;
+    for (uint8_t p = 0; p < passes; p++) {
+      EPD_DisplayBukys792From800(this->image_bw_);
+      EPD_PartUpdate();
+      if (p + 1 < passes) {
+        bedside_delay_ms(30);
+      }
     }
   }
 }
@@ -486,7 +504,12 @@ void BedsideStatus::dump_config() {
   ESP_LOGCONFIG(TAG, "  Verify SSL: %s", this->verify_ssl_ ? "yes" : "no");
   ESP_LOGCONFIG(TAG, "  DisplayStatus filter: %d", this->display_status_filter_);
   ESP_LOGCONFIG(TAG, "  EPD partial refresh passes: %u", this->display_passes_);
-  ESP_LOGCONFIG(TAG, "  EPD full update (0xF7): %s", this->epd_full_update_ ? "yes" : "no");
+  ESP_LOGCONFIG(TAG, "  EPD full refresh on boot: %s", this->epd_full_refresh_on_boot_ ? "yes" : "no");
+  if (this->epd_full_refresh_interval_ms_ > 0) {
+    ESP_LOGCONFIG(TAG, "  EPD full refresh interval: %u min", this->epd_full_refresh_interval_ms_ / 60000u);
+  } else {
+    ESP_LOGCONFIG(TAG, "  EPD full refresh interval: off (partial only)");
+  }
   ESP_LOGCONFIG(TAG, "  EPD first paint runs in loop() after setup (not during setup())");
   LOG_UPDATE_INTERVAL(this);
 }
