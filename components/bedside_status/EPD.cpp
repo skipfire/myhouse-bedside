@@ -352,8 +352,8 @@ void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uin
       if ((x - x0) == 24) {
         x = x0;
         y0 = static_cast<uint16_t>(y0 + 8);
-        y = y0;
       }
+      y = y0;
     }
     chr++;
     x = static_cast<uint16_t>(x0 + 24);
