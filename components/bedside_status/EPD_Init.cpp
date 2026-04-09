@@ -1,7 +1,15 @@
 #include "EPD_Init.h"
 #include "EPD.h"
 
-#include "esphome/core/helpers.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+static inline void epd_delay_ms(int ms) {
+  if (ms <= 0) {
+    return;
+  }
+  vTaskDelay(pdMS_TO_TICKS(ms));
+}
 
 
 
@@ -27,11 +35,11 @@ void EPD_READBUSY(void)
 *******************************************************************/
 void EPD_HW_RESET(void)
 {
-  esphome::delay(10);
+  epd_delay_ms(10);
   EPD_RES_Clr();
-  esphome::delay(10);
+  epd_delay_ms(10);
   EPD_RES_Set();
-  esphome::delay(10);
+  epd_delay_ms(10);
   EPD_READBUSY();
 }
 
@@ -85,7 +93,7 @@ void EPD_DeepSleep(void)
 
   EPD_WR_REG(0x10);
   EPD_WR_DATA8(0x01);
-  esphome::delay(5);
+  epd_delay_ms(5);
 }
 
 void EPD_Init(void)

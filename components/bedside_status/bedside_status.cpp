@@ -3,17 +3,20 @@
 #include "EPD_Init.h"
 
 #include "esphome/core/gpio.h"
-#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
-#include <ArduinoJson.h>
+#include "cJSON.h"
 #ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
 #include "esp_crt_bundle.h"
 #endif
 #include "esp_http_client.h"
 #include "esp_netif.h"
+#include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <vector>
@@ -27,6 +30,17 @@ static const int STATUS_LINE_COUNT = 6;
 static const int LINE_CHAR_LIMIT = 32;
 static const int LINE_CHAR_HEAD = 29;
 static const char *BLANK_PLACEHOLDER = "--------";
+
+static inline void bedside_delay_ms(uint32_t ms) {
+  if (ms == 0) {
+    return;
+  }
+  vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+static inline uint32_t bedside_millis() {
+  return static_cast<uint32_t>(esp_timer_get_time() / 1000ULL);
+}
 
 static bool wifi_sta_has_ip() {
   esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
@@ -129,39 +143,64 @@ std::string BedsideStatus::format_time_ampm_() {
 
 void BedsideStatus::status_lines_from_json_(const std::string &json, bool *ok) {
   *ok = false;
-  DynamicJsonDocument doc(12288);
-  DeserializationError err = deserializeJson(doc, json);
-  if (err) {
-    ESP_LOGW(TAG, "JSON parse error: %s", err.c_str());
-    this->lines_[STATUS_LINE_COUNT - 1] = std::string("JSON: ") + err.c_str();
+  cJSON *root = cJSON_Parse(json.c_str());
+  if (root == nullptr) {
+    ESP_LOGW(TAG, "JSON parse error");
     for (int i = 0; i < STATUS_LINE_COUNT - 1; i++)
       this->lines_[i].clear();
+    this->lines_[STATUS_LINE_COUNT - 1] = "JSON parse error";
     return;
   }
-  if (!doc.is<JsonArray>()) {
+  if (!cJSON_IsArray(root)) {
+    cJSON_Delete(root);
+    for (int i = 0; i < STATUS_LINE_COUNT - 1; i++)
+      this->lines_[i].clear();
     this->lines_[STATUS_LINE_COUNT - 1] = "expected JSON array";
-    for (int i = 0; i < STATUS_LINE_COUNT - 1; i++)
-      this->lines_[i].clear();
     return;
   }
-  JsonArray arr = doc.as<JsonArray>();
+
   std::vector<std::string> issues;
-  for (size_t i = 0; i < arr.size(); i++) {
-    JsonVariant v = arr[i];
-    if (!v.is<JsonObject>())
+  cJSON *item = nullptr;
+  cJSON_ArrayForEach(item, root) {
+    if (!cJSON_IsObject(item)) {
       continue;
-    JsonObject o = v.as<JsonObject>();
-    if (!o.containsKey("DisplayStatus"))
+    }
+    cJSON *st = cJSON_GetObjectItemCaseSensitive(item, "DisplayStatus");
+    if (st == nullptr) {
       continue;
-    int st = o["DisplayStatus"] | -1;
-    if (st != this->display_status_filter_)
+    }
+    int st_val = -1;
+    if (cJSON_IsNumber(st)) {
+      st_val = static_cast<int>(cJSON_GetNumberValue(st));
+    } else if (cJSON_IsString(st)) {
+      const char *sv = cJSON_GetStringValue(st);
+      if (sv != nullptr) {
+        st_val = atoi(sv);
+      }
+    } else {
       continue;
-    const char *name = o["DisplayName"] | "";
-    const char *val = o["DisplayValue"] | "";
+    }
+    if (st_val != this->display_status_filter_) {
+      continue;
+    }
+
+    const char *name = "";
+    const char *val = "";
+    cJSON *jn = cJSON_GetObjectItemCaseSensitive(item, "DisplayName");
+    if (cJSON_IsString(jn) && jn->valuestring != nullptr) {
+      name = jn->valuestring;
+    }
+    cJSON *jv = cJSON_GetObjectItemCaseSensitive(item, "DisplayValue");
+    if (cJSON_IsString(jv) && jv->valuestring != nullptr) {
+      val = jv->valuestring;
+    }
+
     char line[96];
     snprintf(line, sizeof(line), "%s - %s", name, val);
     issues.emplace_back(line);
   }
+
+  cJSON_Delete(root);
 
   for (auto &l : this->lines_)
     l.clear();
@@ -303,7 +342,7 @@ void BedsideStatus::setup() {
   if (this->pin_screen_power_ != nullptr) {
     this->pin_screen_power_->setup();
     this->pin_screen_power_->digital_write(true);
-    delay(50);
+    bedside_delay_ms(50);
   }
 
   this->pin_sck_->setup();
@@ -334,7 +373,7 @@ void BedsideStatus::setup() {
 }
 
 void BedsideStatus::loop() {
-  uint32_t now = millis();
+  uint32_t now = bedside_millis();
   uint32_t interval = this->last_fetch_ok_ ? 500u : 5000u;
   if (now - this->last_partial_ms_ < interval)
     return;
