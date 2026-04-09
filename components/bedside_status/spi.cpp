@@ -6,7 +6,8 @@ static void configure_output(int pin) {
 }
 
 static void configure_input(int pin) {
-  gpio_reset_pin((gpio_num_t) pin);
+  /* Do not gpio_reset_pin() here: BUSY is configured first by ESPHome's GPIOPin::setup().
+   * Resetting then re-reading with gpio_get_level() has faulted on ESP-IDF 5.x (S3). */
   gpio_set_direction((gpio_num_t) pin, GPIO_MODE_INPUT);
 }
 
