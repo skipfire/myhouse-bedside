@@ -269,6 +269,10 @@ void EPD_Display(const uint8_t *ImageBW)
   EPD_SetRAMSP();
   EPD_SetRAMSA();
   EPD_WR_REG(0xa4);   //write RAM for black(0)/white (1)
+  /* Must restart scan: second loop reused stale templine/tempcol and sent wrong bytes
+   * to the slave RAM — weak / uneven ink until the next full redraw pass. */
+  templine = 0;
+  tempcol = 0;
   for (i = 0; i < ALLSCREEN_BYTES; i++)
   {
     tempOriginal = *(ImageBW + templine * Source_BYTES * 2 + tempcol);
