@@ -269,10 +269,13 @@ void EPD_Display(const uint8_t *ImageBW)
   EPD_SetRAMSP();
   EPD_SetRAMSA();
   EPD_WR_REG(0xa4);   //write RAM for black(0)/white (1)
-  /* Must restart scan: second loop reused stale templine/tempcol and sent wrong bytes
-   * to the slave RAM — weak / uneven ink until the next full redraw pass. */
+  /* Same dual-IC byte dislocation as EPD_WhiteScreen_ALL_Fast: slave transfer must not
+   * repeat the master scan from (0,0); that misaligns the two RAMs and blanks most
+   * of the panel. Leaving stale tempcol (e.g. 50) was also wrong — weak/washed ink. */
+  if (tempcol > 0) {
+    tempcol--;
+  }
   templine = 0;
-  tempcol = 0;
   for (i = 0; i < ALLSCREEN_BYTES; i++)
   {
     tempOriginal = *(ImageBW + templine * Source_BYTES * 2 + tempcol);
