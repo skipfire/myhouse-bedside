@@ -90,13 +90,16 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
 					Y=Xpoint;
 					break;
 			case 180:
-				  if(Xpoint>=396)
-					{
-						Xpoint+=8;
-					}
-					X=Paint.widthMemory-Xpoint-1;
-					Y=Paint.heightMemory-Ypoint-1;
-					break;
+				  /* Logical X must stay < EPD_VISIBLE_W or Xpoint+8 overflows seam mapping. */
+				  if (Xpoint >= EPD_VISIBLE_W || Ypoint >= Paint.heightMemory) {
+				    return;
+				  }
+				  if (Xpoint >= 396) {
+				    Xpoint += 8;
+				  }
+				  X = static_cast<uint16_t>(Paint.widthMemory - Xpoint - 1);
+				  Y = static_cast<uint16_t>(Paint.heightMemory - Ypoint - 1);
+				  break;
 
 			case 270:
 					if(Ypoint>=396)
@@ -109,10 +112,10 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
 				default:
 						return;
     }
-		Addr=X/8+Y*Paint.widthByte;
-    if (Addr >= static_cast<uint32_t>(Paint.widthByte) * Paint.heightByte) {
+    if (X >= Paint.widthMemory || Y >= Paint.heightMemory) {
       return;
     }
+		Addr=X/8+Y*Paint.widthByte;
     Rdata=Paint.Image[Addr];
     if (Color == EPD_COLOR_BLACK)
     {    
@@ -331,19 +334,17 @@ void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uin
       ci = 0;
     }
     auto chr1 = static_cast<uint16_t>(ci);
+    const uint16_t paper =
+        (color == EPD_COLOR_BLACK) ? EPD_COLOR_WHITE : EPD_COLOR_BLACK;
     for (i = 0; i < 36; i++) {
       temp = ascii_2412[chr1][i];
       for (m = 0; m < 8; m++) {
         if (temp & 0x01) {
           Paint_SetPixel(x, y, color);
-          if (x + 1 < EPD_VISIBLE_W) {
-            Paint_SetPixel(static_cast<uint16_t>(x + 1), y, color);
-          }
+          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, color);
         } else {
-          Paint_SetPixel(x, y, !color);
-          if (x + 1 < EPD_VISIBLE_W) {
-            Paint_SetPixel(static_cast<uint16_t>(x + 1), y, !color);
-          }
+          Paint_SetPixel(x, y, paper);
+          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, paper);
         }
         temp >>= 1;
         y++;
