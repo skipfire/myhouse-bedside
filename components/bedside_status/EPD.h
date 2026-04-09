@@ -35,6 +35,8 @@ void EPD_DrawRectangle(uint16_t Xstart,uint16_t Ystart,uint16_t Xend,uint16_t Ye
 void EPD_DrawCircle(uint16_t X_Center,uint16_t Y_Center,uint16_t Radius,uint16_t Color,uint8_t mode);        //draw a circle
 void EPD_ShowChar(uint16_t x,uint16_t y,uint16_t chr,uint16_t size1,uint16_t color);                          //display Characters
 void EPD_ShowString(uint16_t x,uint16_t y,const char *chr,uint16_t size1,uint16_t color);                        //display string
+/** ascii_2412 is 12x24; duplicate each column -> 24x24 (matches MicroPython 8x8 @ scale 3). */
+void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uint16_t color);
 void EPD_ShowNum(uint16_t x,uint16_t y,uint32_t num,uint16_t len,uint16_t size1,uint16_t color);                 //display numbers
 void EPD_ShowPicture(uint16_t x,uint16_t y,uint16_t sizex,uint16_t sizey,const uint8_t BMP[],uint16_t Color);		//display picture
 void EPD_ClearWindows(uint16_t xs,uint16_t ys,uint16_t xe,uint16_t ye,uint16_t color);

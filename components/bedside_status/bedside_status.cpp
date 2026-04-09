@@ -31,6 +31,42 @@ static const int LINE_CHAR_LIMIT = 32;
 static const int LINE_CHAR_HEAD = 29;
 static const char *BLANK_PLACEHOLDER = "--------";
 
+// Match bedside_render.py (FOOTER_BAND_HEIGHT, STATUS_TOP_MARGIN, six status rows).
+static const uint16_t FOOTER_BAND_HEIGHT = 40;
+static const uint16_t STATUS_TOP_MARGIN = 2;
+
+static uint16_t elecrow_glyph_height(uint16_t sz) {
+  switch (sz) {
+    case 12:
+      return 16;
+    case 16:
+      return 16;
+    case 24:
+      return 24;
+    case 48:
+      return 48;
+    case 8:
+      return 8;
+    default:
+      return 24;
+  }
+}
+
+static uint16_t elecrow_char_advance_x(uint16_t sz) {
+  if (sz == 24) {
+    return 24;
+  }
+  return sz / 2;
+}
+
+static void epd_draw_string_sized(uint16_t x, uint16_t y, const char *s, uint16_t sz, uint16_t color) {
+  if (sz == 24) {
+    EPD_ShowString2412_DoubleWidth(x, y, s, color);
+  } else {
+    EPD_ShowString(x, y, s, sz, color);
+  }
+}
+
 static inline void bedside_delay_ms(uint32_t ms) {
   if (ms == 0) {
     return;
@@ -285,7 +321,18 @@ void BedsideStatus::fetch_status_http_() {
 void BedsideStatus::draw_status_screen_() {
   Paint_Clear(EPD_COLOR_WHITE);
 
-  static const uint16_t y_positions[6] = {10, 50, 90, 130, 170, 210};
+  const uint16_t gh = elecrow_glyph_height(this->text_size_);
+  const uint16_t footer_y0 = static_cast<uint16_t>(EPD_H - FOOTER_BAND_HEIGHT);
+  const uint16_t avail =
+      (footer_y0 > STATUS_TOP_MARGIN) ? static_cast<uint16_t>(footer_y0 - STATUS_TOP_MARGIN) : 0;
+  uint16_t pitch = gh;
+  if (avail > 0) {
+    const uint16_t min_pitch = static_cast<uint16_t>(avail / STATUS_LINE_COUNT);
+    if (min_pitch > pitch) {
+      pitch = min_pitch;
+    }
+  }
+
   char clipped[40];
 
   for (int i = 0; i < STATUS_LINE_COUNT; i++) {
@@ -302,8 +349,14 @@ void BedsideStatus::draw_status_screen_() {
         raw = BLANK_PLACEHOLDER;
     }
     clip_line_(raw, clipped, sizeof(clipped));
-    if (clipped[0] != '\0')
-      EPD_ShowString(8, y_positions[i], clipped, this->text_size_, EPD_COLOR_BLACK);
+    if (clipped[0] != '\0') {
+      const uint16_t slot_top = static_cast<uint16_t>(STATUS_TOP_MARGIN + static_cast<uint16_t>(i) * pitch);
+      uint16_t y_text = slot_top;
+      if (pitch > gh) {
+        y_text = static_cast<uint16_t>(y_text + (pitch - gh) / 2);
+      }
+      epd_draw_string_sized(8, y_text, clipped, this->text_size_, EPD_COLOR_BLACK);
+    }
   }
 
   std::string ip = wifi_sta_has_ip() ? wifi_sta_ip_str() : std::string("---");
@@ -312,24 +365,31 @@ void BedsideStatus::draw_status_screen_() {
   char time_buf[24];
   clip_line_(clk, time_buf, sizeof(time_buf));
 
-  const uint16_t fy = 232;
   const uint16_t fs = this->footer_text_size_;
-  const uint16_t cw = fs / 2;
+  const uint16_t fgh = elecrow_glyph_height(fs);
+  const uint16_t cw = elecrow_char_advance_x(fs);
+  const uint16_t room_below = static_cast<uint16_t>(EPD_H - footer_y0);
+  uint16_t pad = 2;
+  if (room_below > fgh) {
+    const uint16_t p = static_cast<uint16_t>((room_below - fgh) / 2);
+    pad = p > 2 ? p : 2;
+  }
+  const uint16_t fy = static_cast<uint16_t>(footer_y0 + pad);
 
   if (this->footer_ip_left_) {
-    EPD_ShowString(8, fy, clipped, fs, EPD_COLOR_BLACK);
+    epd_draw_string_sized(8, fy, clipped, fs, EPD_COLOR_BLACK);
     uint16_t tw = static_cast<uint16_t>(strlen(time_buf)) * cw;
     uint16_t tx = static_cast<uint16_t>(EPD_W - 8 - tw);
     if (tx < 8)
       tx = 8;
-    EPD_ShowString(tx, fy, time_buf, fs, EPD_COLOR_BLACK);
+    epd_draw_string_sized(tx, fy, time_buf, fs, EPD_COLOR_BLACK);
   } else {
-    EPD_ShowString(8, fy, time_buf, fs, EPD_COLOR_BLACK);
+    epd_draw_string_sized(8, fy, time_buf, fs, EPD_COLOR_BLACK);
     uint16_t iw = static_cast<uint16_t>(strlen(clipped)) * cw;
     uint16_t ix = static_cast<uint16_t>(EPD_W - 8 - iw);
     if (ix < 8)
       ix = 8;
-    EPD_ShowString(ix, fy, clipped, fs, EPD_COLOR_BLACK);
+    epd_draw_string_sized(ix, fy, clipped, fs, EPD_COLOR_BLACK);
   }
 
   EPD_Display(this->image_bw_);

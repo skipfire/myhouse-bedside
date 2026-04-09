@@ -308,6 +308,44 @@ void EPD_ShowString(uint16_t x,uint16_t y,const char *chr,uint16_t size1,uint16_
 		x+=size1/2;
   }
 }
+
+void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uint16_t color)
+{
+  while (*chr != '\0') {
+    const uint16_t y_line = y;
+    uint16_t i, m, temp;
+    uint16_t x0 = x;
+    uint16_t y0 = y_line;
+    int ci = *chr - ' ';
+    if (ci < 0 || ci > 94) {
+      ci = 0;
+    }
+    auto chr1 = static_cast<uint16_t>(ci);
+    for (i = 0; i < 36; i++) {
+      temp = ascii_2412[chr1][i];
+      for (m = 0; m < 8; m++) {
+        if (temp & 0x01) {
+          Paint_SetPixel(x, y, color);
+          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, color);
+        } else {
+          Paint_SetPixel(x, y, !color);
+          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, !color);
+        }
+        temp >>= 1;
+        y++;
+      }
+      x += 2;
+      if ((x - x0) == 24) {
+        x = x0;
+        y0 = static_cast<uint16_t>(y0 + 8);
+        y = y0;
+      }
+    }
+    chr++;
+    x = static_cast<uint16_t>(x0 + 24);
+    y = y_line;
+  }
+}
 /*******************************************************************
    Function description: Exponential operation
     Interface Description: 

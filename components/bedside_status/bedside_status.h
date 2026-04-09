@@ -58,7 +58,8 @@ class BedsideStatus : public PollingComponent {
   bool footer_ip_left_{true};
   int display_status_filter_{3};
   uint16_t text_size_{24};
-  uint16_t footer_text_size_{16};
+  /** Match MicroPython bedside_render (scale=3): use 24 with double-width 2412 font. */
+  uint16_t footer_text_size_{24};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];

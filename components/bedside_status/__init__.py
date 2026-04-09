@@ -41,7 +41,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_FOOTER_IP_LEFT, default=True): cv.boolean,
         cv.Optional(CONF_DISPLAY_STATUS_FILTER, default=3): cv.int_range(min=0, max=255),
         cv.Optional(CONF_TEXT_SIZE, default=24): cv.int_range(min=12, max=48),
-        cv.Optional(CONF_FOOTER_TEXT_SIZE, default=16): cv.int_range(min=8, max=48),
+        cv.Optional(CONF_FOOTER_TEXT_SIZE, default=24): cv.int_range(min=8, max=48),
         cv.Optional(CONF_TIME_ID): cv.use_id(time_comp.RealTimeClock),
     }
 ).extend(cv.polling_component_schema("5s"))
