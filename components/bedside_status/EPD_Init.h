@@ -11,6 +11,8 @@
 //If the EPD_ShowPicture function is used to display images in full screen, the modulus resolution is 792x272
 #define EPD_W	800
 #define EPD_H	272
+/** Logical X must stay < this for Paint_SetPixel seam math (dual SSD1683); 792..799 maps out of range. */
+#define EPD_VISIBLE_W 792
 
 /* Renamed from WHITE/BLACK to avoid clashing with esphome::Color::WHITE / ::BLACK macros in color.h */
 #define EPD_COLOR_WHITE 0xFF

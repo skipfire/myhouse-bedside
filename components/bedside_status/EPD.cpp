@@ -67,7 +67,10 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
 {
 	uint16_t X, Y;
 	uint32_t Addr;
-	uint8_t Rdata;		
+	uint8_t Rdata;
+    if (Paint.Image == nullptr) {
+      return;
+    }
     switch(Paint.rotate) 
 		{
 				case 0:
@@ -107,6 +110,9 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
 						return;
     }
 		Addr=X/8+Y*Paint.widthByte;
+    if (Addr >= static_cast<uint32_t>(Paint.widthByte) * Paint.heightByte) {
+      return;
+    }
     Rdata=Paint.Image[Addr];
     if (Color == EPD_COLOR_BLACK)
     {    
@@ -312,11 +318,15 @@ void EPD_ShowString(uint16_t x,uint16_t y,const char *chr,uint16_t size1,uint16_
 void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uint16_t color)
 {
   while (*chr != '\0') {
+    if (x + 24 > EPD_VISIBLE_W || y + 24 > EPD_H) {
+      break;
+    }
     const uint16_t y_line = y;
     uint16_t i, m, temp;
     uint16_t x0 = x;
     uint16_t y0 = y_line;
-    int ci = *chr - ' ';
+    unsigned char uc = static_cast<unsigned char>(*chr);
+    int ci = static_cast<int>(uc) - ' ';
     if (ci < 0 || ci > 94) {
       ci = 0;
     }
@@ -326,10 +336,14 @@ void EPD_ShowString2412_DoubleWidth(uint16_t x, uint16_t y, const char *chr, uin
       for (m = 0; m < 8; m++) {
         if (temp & 0x01) {
           Paint_SetPixel(x, y, color);
-          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, color);
+          if (x + 1 < EPD_VISIBLE_W) {
+            Paint_SetPixel(static_cast<uint16_t>(x + 1), y, color);
+          }
         } else {
           Paint_SetPixel(x, y, !color);
-          Paint_SetPixel(static_cast<uint16_t>(x + 1), y, !color);
+          if (x + 1 < EPD_VISIBLE_W) {
+            Paint_SetPixel(static_cast<uint16_t>(x + 1), y, !color);
+          }
         }
         temp >>= 1;
         y++;
