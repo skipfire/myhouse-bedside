@@ -18,6 +18,6 @@ that moved cJSON into cjson_upstream.c, use ESPHome "Clean Build Files" once so 
 regenerates the source list. A minimal bedside_cjson.cpp is kept in the repo to avoid
 that failure on stale Ninja rules.
 
-bedside_status: repeat partial refresh is configured with epd_partial_passes (1–5, default 3).
+bedside_status: repeat partial refresh is epd_partial_passes (1–5, default 1; raise to 2–3 if ink is weak).
 If YAML says that option is invalid, the add-on is using an old copy of the external
 component — set external_components refresh (e.g. 1h) or reinstall/update the git ref.

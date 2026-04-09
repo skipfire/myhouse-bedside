@@ -34,7 +34,20 @@ extern int elecrow579_pin_busy;
 #define EPD_CS_Clr() gpio_set_level((gpio_num_t) (CS), 0)
 #define EPD_CS_Set() gpio_set_level((gpio_num_t) (CS), 1)
 
-#define EPD_ReadBUSY gpio_get_level((gpio_num_t) (BUSY))
+#define EPD_ReadBUSY bedside_epd_read_busy_level()
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** If set, EPD_READBUSY() uses this (e.g. ESPHome GPIOPin); else gpio_get_level(BUSY). */
+typedef int (*bedside_epd_busy_read_fn)(void);
+void bedside_epd_set_busy_read_fn(bedside_epd_busy_read_fn fn);
+int bedside_epd_read_busy_level(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 void EPD_GPIOInit(void);
 void EPD_WR_Bus(uint8_t dat);

@@ -52,8 +52,8 @@ bedside_status:
   verify_ssl: true
   footer_ip_left: true
   display_status_filter: 3
-  # Each pass runs EPD_Display + EPD_PartUpdate (~1.5s BUSY each). Default 3 helps contrast;
-  # use 1 for faster refresh (expect softer partial ink). Key is epd_partial_passes (not display_*).
-  epd_partial_passes: 3
+  # Each pass runs EPD_Display + EPD_PartUpdate (~1.5s BUSY each). Try 2–3 if ink looks weak;
+  # default 1 avoids long setup and repeated BUSY polling. Key is epd_partial_passes (not display_*).
+  epd_partial_passes: 1
   time_id: ha_time
   update_interval: 5s

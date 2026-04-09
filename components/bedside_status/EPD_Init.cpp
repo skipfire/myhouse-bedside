@@ -21,16 +21,12 @@ static inline void epd_delay_ms(int ms) {
 *******************************************************************/
 void EPD_READBUSY(void)
 {
-  const gpio_num_t busy_gpio = static_cast<gpio_num_t>(BUSY);
-  if (!GPIO_IS_VALID_GPIO(busy_gpio)) {
-    return;
-  }
   const int64_t deadline_us = esp_timer_get_time() + (20LL * 1000000);
-  while (gpio_get_level(busy_gpio) != 0) {
+  while (bedside_epd_read_busy_level() != 0) {
     if (esp_timer_get_time() > deadline_us) {
       break;
     }
-    portYIELD();
+    vTaskDelay(1);
   }
 }
 /*******************************************************************

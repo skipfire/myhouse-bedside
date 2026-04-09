@@ -35,6 +35,10 @@ class BedsideStatus : public PollingComponent {
   void set_footer_text_size(uint16_t v) { this->footer_text_size_ = v; }
   void set_display_passes(uint8_t v) { this->display_passes_ = v; }
 
+ private:
+  static BedsideStatus *epd_busy_parent_;
+  static int epd_busy_read_trampoline_(void);
+
  protected:
   void epd_init_sequence_();
   void apply_elecrow_pin_numbers_();
@@ -62,7 +66,7 @@ class BedsideStatus : public PollingComponent {
   /** Match MicroPython bedside_render (scale=3): use 24 with double-width 2412 font. */
   uint16_t footer_text_size_{24};
   /** Repeat EPD_Display + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
-  uint8_t display_passes_{3};
+  uint8_t display_passes_{1};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];

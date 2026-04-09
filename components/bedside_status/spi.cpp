@@ -1,5 +1,20 @@
 #include "spi.h"
 
+static bedside_epd_busy_read_fn g_bedside_epd_busy_read = nullptr;
+
+void bedside_epd_set_busy_read_fn(bedside_epd_busy_read_fn fn) { g_bedside_epd_busy_read = fn; }
+
+int bedside_epd_read_busy_level(void) {
+  if (g_bedside_epd_busy_read != nullptr) {
+    return g_bedside_epd_busy_read();
+  }
+  const gpio_num_t g = static_cast<gpio_num_t>(BUSY);
+  if (!GPIO_IS_VALID_GPIO(g)) {
+    return 0;
+  }
+  return gpio_get_level(g);
+}
+
 static void configure_output(int pin) {
   gpio_reset_pin((gpio_num_t) pin);
   gpio_set_direction((gpio_num_t) pin, GPIO_MODE_OUTPUT);

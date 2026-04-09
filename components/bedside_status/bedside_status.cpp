@@ -1,6 +1,7 @@
 #include "bedside_status.h"
 #include "EPD.h"
 #include "EPD_Init.h"
+#include "spi.h"
 
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
@@ -30,6 +31,15 @@ static const int STATUS_LINE_COUNT = 6;
 static const int LINE_CHAR_LIMIT = 32;
 static const int LINE_CHAR_HEAD = 29;
 static const char *BLANK_PLACEHOLDER = "--------";
+
+BedsideStatus *BedsideStatus::epd_busy_parent_{nullptr};
+
+int BedsideStatus::epd_busy_read_trampoline_(void) {
+  if (BedsideStatus::epd_busy_parent_ == nullptr || BedsideStatus::epd_busy_parent_->pin_busy_ == nullptr) {
+    return 0;
+  }
+  return BedsideStatus::epd_busy_parent_->pin_busy_->digital_read() ? 1 : 0;
+}
 
 // Match bedside_render.py (FOOTER_BAND_HEIGHT, STATUS_TOP_MARGIN, six status rows).
 static const uint16_t FOOTER_BAND_HEIGHT = 40;
@@ -424,6 +434,9 @@ void BedsideStatus::setup() {
   this->pin_dc_->pin_mode(gpio::FLAG_OUTPUT);
   this->pin_cs_->pin_mode(gpio::FLAG_OUTPUT);
   this->pin_busy_->pin_mode(gpio::FLAG_INPUT);
+
+  BedsideStatus::epd_busy_parent_ = this;
+  bedside_epd_set_busy_read_fn(&BedsideStatus::epd_busy_read_trampoline_);
 
   this->apply_elecrow_pin_numbers_();
   this->epd_init_sequence_();
