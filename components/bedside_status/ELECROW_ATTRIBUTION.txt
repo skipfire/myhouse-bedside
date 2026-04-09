@@ -1,0 +1,10 @@
+Low-level e-paper driving code for the CrowPanel 5.79" display is taken from Elecrow's
+official ESP32-S3 sample (partial refresh), maintained in:
+
+  https://github.com/Elecrow-RD/ESP32_S3-Ink-Screen
+
+Vendored files (under components/bedside_status/):
+  EPD.cpp, EPD.h, EPD_Init.cpp, EPD_Init.h, EPDfont.h, spi.cpp
+
+Modified for ESPHome:
+  spi.h — GPIO numbers are runtime-configurable (extern ints + defaults).
