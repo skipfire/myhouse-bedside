@@ -34,6 +34,7 @@ class BedsideStatus : public PollingComponent {
   void set_text_size(uint16_t v) { this->text_size_ = v; }
   void set_footer_text_size(uint16_t v) { this->footer_text_size_ = v; }
   void set_display_passes(uint8_t v) { this->display_passes_ = v; }
+  void set_epd_full_update(bool v) { this->epd_full_update_ = v; }
 
  private:
   static BedsideStatus *epd_busy_parent_;
@@ -67,6 +68,8 @@ class BedsideStatus : public PollingComponent {
   uint16_t footer_text_size_{24};
   /** Repeat bitmap push + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
   uint8_t display_passes_{1};
+  /** If true, EPD_Update (0xF7) instead of EPD_PartUpdate (0xDC) — darker/solid, much slower (~5s+). */
+  bool epd_full_update_{false};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];

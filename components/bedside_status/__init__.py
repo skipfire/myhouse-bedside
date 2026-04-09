@@ -27,6 +27,7 @@ CONF_TEXT_SIZE = "text_size"
 CONF_FOOTER_TEXT_SIZE = "footer_text_size"
 # Not "display_*" — some ESPHome setups flag that prefix; this is EPD partial refresh only.
 CONF_EPD_PARTIAL_PASSES = "epd_partial_passes"
+CONF_EPD_FULL_UPDATE = "epd_full_update"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -45,6 +46,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_TEXT_SIZE, default=24): cv.int_range(min=12, max=48),
         cv.Optional(CONF_FOOTER_TEXT_SIZE, default=24): cv.int_range(min=8, max=48),
         cv.Optional(CONF_EPD_PARTIAL_PASSES, default=1): cv.int_range(min=1, max=5),
+        cv.Optional(CONF_EPD_FULL_UPDATE, default=False): cv.boolean,
         cv.Optional(CONF_TIME_ID): cv.use_id(time_comp.RealTimeClock),
     }
 ).extend(cv.polling_component_schema("5s"))
@@ -75,6 +77,7 @@ async def to_code(config):
     cg.add(var.set_text_size(config[CONF_TEXT_SIZE]))
     cg.add(var.set_footer_text_size(config[CONF_FOOTER_TEXT_SIZE]))
     cg.add(var.set_display_passes(config[CONF_EPD_PARTIAL_PASSES]))
+    cg.add(var.set_epd_full_update(config[CONF_EPD_FULL_UPDATE]))
 
     if CONF_TIME_ID in config:
         t = await cg.get_variable(config[CONF_TIME_ID])

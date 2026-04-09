@@ -343,20 +343,31 @@ static void EPD_SetRAMSA_Bukys(void)
   EPD_WR_DATA8(0x00);
 }
 
+static uint8_t reverse_bits_u8(uint8_t b)
+{
+  b = (uint8_t)(((b & 0xF0u) >> 4) | ((b & 0x0Fu) << 4));
+  b = (uint8_t)(((b & 0xCCu) >> 2) | ((b & 0x33u) << 2));
+  b = (uint8_t)(((b & 0xAAu) >> 1) | ((b & 0x55u) << 1));
+  return b;
+}
+
+/* Paint uses Elecrow scan (0x05 RAM); Bukys stream assumes Ignas entry mode (0x02). Remap 180° + MSB
+ * reversal so the 792×272 slice matches on-screen orientation vs EPD_Display. */
 static uint8_t epd_byte_visible792_from_800buf(const uint8_t *img, uint32_t linear792)
 {
-  uint32_t row = linear792 / BUKYS_ROW_BYTES;
-  uint32_t col = linear792 % BUKYS_ROW_BYTES;
+  const uint32_t row_b = linear792 / BUKYS_ROW_BYTES;
+  const uint32_t col_b = linear792 % BUKYS_ROW_BYTES;
+  const uint32_t row = (uint32_t) Gate_BITS - 1u - row_b;
+  const uint32_t col = BUKYS_ROW_BYTES - 1u - col_b;
   if (row >= (uint32_t) Gate_BITS) {
     return 0xFF;
   }
-  return img[row * ELECROW_ROW_BYTES + col];
+  return reverse_bits_u8(img[row * ELECROW_ROW_BYTES + col]);
 }
 
 void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
 {
   uint32_t pos = 0;
-  uint32_t pair_n = 0;
   /* Static: large setup stack + font drawing; avoid stack pressure on ESPHome loop task. */
   static uint8_t chunk[50];
 
@@ -387,10 +398,6 @@ void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
     /* Long bit-bang can trip ESP32-S3 task/idle WDT (crash BT often ends in prvIdleTask). */
     taskYIELD();
     (void) esp_task_wdt_reset();
-    pair_n++;
-    if ((pair_n & 15u) == 0u) {
-      vTaskDelay(pdMS_TO_TICKS(1));
-    }
   }
 }
 

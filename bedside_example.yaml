@@ -52,8 +52,9 @@ bedside_status:
   verify_ssl: true
   footer_ip_left: true
   display_status_filter: 3
-  # Each pass runs EPD_Display + EPD_PartUpdate (~1.5s BUSY each). Try 2–3 if ink looks weak;
-  # default 1 avoids long setup and repeated BUSY polling. Key is epd_partial_passes (not display_*).
+  # Each pass = Bukys upload + update. Partial (0xDC) is faster; epd_full_update: true uses 0xF7 (~5s+) for darker ink.
+  # Raising epd_partial_passes multiplies time (e.g. 5 passes ≈ 5× BUSY); prefer passes: 1 and full_update if needed.
   epd_partial_passes: 1
+  # epd_full_update: true
   time_id: ha_time
   update_interval: 5s

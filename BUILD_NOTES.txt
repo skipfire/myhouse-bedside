@@ -19,7 +19,8 @@ regenerates the source list. A minimal bedside_cjson.cpp is kept in the repo to 
 that failure on stale Ninja rules.
 
 bedside_status: framebuffer is pushed with the same Bukys 792-wide interleaved SPI sequence as
-MicroPython crowpanel579_epd.display_bitmap (not Elecrow EPD_Display). epd_partial_passes (1–5,
-default 1) repeats partial refresh only; weak text was mainly the wrong RAM upload, not pass count.
+MicroPython crowpanel579_epd.display_bitmap (not Elecrow EPD_Display). Bytes are remapped 180° vs the
+Paint buffer so orientation matches the old Elecrow upload. epd_full_update: true uses waveform 0xF7
+for darker text (~5s+ per draw); epd_partial_passes multiplies upload+update time (default 1).
 If YAML says that option is invalid, the add-on is using an old copy of the external
 component — set external_components refresh (e.g. 1h) or reinstall/update the git ref.

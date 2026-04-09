@@ -406,7 +406,11 @@ void BedsideStatus::draw_status_screen_() {
   for (uint8_t p = 0; p < passes; p++) {
     /* Elecrow EPD_Display targets a different RAM map than this panel; MicroPython uses Bukys interleave. */
     EPD_DisplayBukys792From800(this->image_bw_);
-    EPD_PartUpdate();
+    if (this->epd_full_update_) {
+      EPD_Update();
+    } else {
+      EPD_PartUpdate();
+    }
     if (p + 1 < passes) {
       bedside_delay_ms(30);
     }
@@ -448,7 +452,6 @@ void BedsideStatus::setup() {
   this->lines_[1] = "Bedside status";
   this->lines_[2] = "Waiting for data";
 
-  ESP_LOGI(TAG, "Elecrow EPD initialized (first frame on next loop)");
 }
 
 void BedsideStatus::loop() {
@@ -483,6 +486,8 @@ void BedsideStatus::dump_config() {
   ESP_LOGCONFIG(TAG, "  Verify SSL: %s", this->verify_ssl_ ? "yes" : "no");
   ESP_LOGCONFIG(TAG, "  DisplayStatus filter: %d", this->display_status_filter_);
   ESP_LOGCONFIG(TAG, "  EPD partial refresh passes: %u", this->display_passes_);
+  ESP_LOGCONFIG(TAG, "  EPD full update (0xF7): %s", this->epd_full_update_ ? "yes" : "no");
+  ESP_LOGCONFIG(TAG, "  EPD first paint runs in loop() after setup (not during setup())");
   LOG_UPDATE_INTERVAL(this);
 }
 
