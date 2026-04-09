@@ -7,7 +7,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 extern "C" {
-#include "cjson_upstream.inc"
+#include "cjson_upstream_body.h"
 }
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
