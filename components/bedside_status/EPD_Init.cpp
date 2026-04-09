@@ -355,7 +355,8 @@ static uint8_t epd_byte_visible792_from_800buf(const uint8_t *img, uint32_t line
 void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
 {
   uint32_t pos = 0;
-  uint8_t chunk[50];
+  /* Static: large setup stack + font drawing; avoid stack pressure on ESPHome loop task. */
+  static uint8_t chunk[50];
 
   EPD_SetRAMMP_Bukys();
   EPD_SetRAMMA_Bukys();
@@ -370,9 +371,7 @@ void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
       chunk[i] = epd_byte_visible792_from_800buf(image_bw800, pos + (uint32_t) i);
     }
     EPD_WR_REG(0xA4);
-    for (int i = 0; i < 50; i++) {
-      EPD_WR_DATA8(chunk[i]);
-    }
+    EPD_WR_DATA_BURST(chunk, 50);
     pos += 49;
     if (pos + 50 > BUKYS_BUF_BYTES) {
       break;
@@ -381,10 +380,10 @@ void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
       chunk[i] = epd_byte_visible792_from_800buf(image_bw800, pos + (uint32_t) i);
     }
     EPD_WR_REG(0x24);
-    for (int i = 0; i < 50; i++) {
-      EPD_WR_DATA8(chunk[i]);
-    }
+    EPD_WR_DATA_BURST(chunk, 50);
     pos += 50;
+    /* Long bit-bang without yield has faulted gpio_set_level on ESP32-S3 (task/idle WDT stress). */
+    taskYIELD();
   }
 }
 

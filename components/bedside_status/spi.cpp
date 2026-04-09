@@ -62,3 +62,25 @@ void EPD_WR_DATA8(uint8_t dat) {
   EPD_WR_Bus(dat);
   EPD_DC_Set();
 }
+
+void EPD_WR_DATA_BURST(const uint8_t *buf, size_t len) {
+  if (buf == nullptr || len == 0) {
+    return;
+  }
+  EPD_DC_Set();
+  EPD_CS_Clr();
+  for (size_t k = 0; k < len; k++) {
+    uint8_t dat = buf[k];
+    for (uint8_t i = 0; i < 8; i++) {
+      EPD_SCK_Clr();
+      if (dat & 0x80) {
+        EPD_MOSI_Set();
+      } else {
+        EPD_MOSI_Clr();
+      }
+      EPD_SCK_Set();
+      dat <<= 1;
+    }
+  }
+  EPD_CS_Set();
+}

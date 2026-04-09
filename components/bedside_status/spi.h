@@ -2,6 +2,7 @@
 #define _SPI_H_
 
 #include "driver/gpio.h"
+#include <stddef.h>
 
 // Runtime GPIO numbers for CrowPanel 5.79" (Elecrow sample uses bit-bang SPI).
 // Set before EPD_GPIOInit() (BedsideStatus copies YAML pins into these).
@@ -53,5 +54,7 @@ void EPD_GPIOInit(void);
 void EPD_WR_Bus(uint8_t dat);
 void EPD_WR_REG(uint8_t reg);
 void EPD_WR_DATA8(uint8_t dat);
+/** DC=data; CS stays low for all bytes (matches MicroPython write_data_burst). */
+void EPD_WR_DATA_BURST(const uint8_t *buf, size_t len);
 
 #endif
