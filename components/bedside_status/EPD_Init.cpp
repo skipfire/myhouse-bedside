@@ -1,6 +1,8 @@
 #include "EPD_Init.h"
 #include "EPD.h"
 
+#include "esphome/core/helpers.h"
+
 
 
 /*******************************************************************
@@ -25,11 +27,11 @@ void EPD_READBUSY(void)
 *******************************************************************/
 void EPD_HW_RESET(void)
 {
-  delay(10);
+  esphome::delay(10);
   EPD_RES_Clr();
-  delay(10);
+  esphome::delay(10);
   EPD_RES_Set();
-  delay(10);
+  esphome::delay(10);
   EPD_READBUSY();
 }
 
@@ -83,7 +85,7 @@ void EPD_DeepSleep(void)
 
   EPD_WR_REG(0x10);
   EPD_WR_DATA8(0x01);
-  delay(5);
+  esphome::delay(5);
 }
 
 void EPD_Init(void)

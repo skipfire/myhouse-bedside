@@ -1,10 +1,10 @@
 #ifndef _SPI_H_
 #define _SPI_H_
 
-#include <Arduino.h>
+#include "driver/gpio.h"
 
 // Runtime GPIO numbers for CrowPanel 5.79" (Elecrow sample uses bit-bang SPI).
-// Set via esphome::bedside_status::elecrow579_apply_pin_numbers() before EPD_GPIOInit().
+// Set before EPD_GPIOInit() (BedsideStatus copies YAML pins into these).
 extern int elecrow579_pin_sck;
 extern int elecrow579_pin_mosi;
 extern int elecrow579_pin_res;
@@ -19,22 +19,22 @@ extern int elecrow579_pin_busy;
 #define CS elecrow579_pin_cs
 #define BUSY elecrow579_pin_busy
 
-#define EPD_SCK_Clr() digitalWrite(SCK, LOW)
-#define EPD_SCK_Set() digitalWrite(SCK, HIGH)
+#define EPD_SCK_Clr() gpio_set_level((gpio_num_t) (SCK), 0)
+#define EPD_SCK_Set() gpio_set_level((gpio_num_t) (SCK), 1)
 
-#define EPD_MOSI_Clr() digitalWrite(MOSI, LOW)
-#define EPD_MOSI_Set() digitalWrite(MOSI, HIGH)
+#define EPD_MOSI_Clr() gpio_set_level((gpio_num_t) (MOSI), 0)
+#define EPD_MOSI_Set() gpio_set_level((gpio_num_t) (MOSI), 1)
 
-#define EPD_RES_Clr() digitalWrite(RES, LOW)
-#define EPD_RES_Set() digitalWrite(RES, HIGH)
+#define EPD_RES_Clr() gpio_set_level((gpio_num_t) (RES), 0)
+#define EPD_RES_Set() gpio_set_level((gpio_num_t) (RES), 1)
 
-#define EPD_DC_Clr() digitalWrite(DC, LOW)
-#define EPD_DC_Set() digitalWrite(DC, HIGH)
+#define EPD_DC_Clr() gpio_set_level((gpio_num_t) (DC), 0)
+#define EPD_DC_Set() gpio_set_level((gpio_num_t) (DC), 1)
 
-#define EPD_CS_Clr() digitalWrite(CS, LOW)
-#define EPD_CS_Set() digitalWrite(CS, HIGH)
+#define EPD_CS_Clr() gpio_set_level((gpio_num_t) (CS), 0)
+#define EPD_CS_Set() gpio_set_level((gpio_num_t) (CS), 1)
 
-#define EPD_ReadBUSY digitalRead(BUSY)
+#define EPD_ReadBUSY gpio_get_level((gpio_num_t) (BUSY))
 
 void EPD_GPIOInit(void);
 void EPD_WR_Bus(uint8_t dat);

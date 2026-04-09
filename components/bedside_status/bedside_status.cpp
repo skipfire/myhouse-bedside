@@ -3,16 +3,19 @@
 #include "EPD_Init.h"
 
 #include "esphome/core/gpio.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
-#include <Arduino.h>
 #include <ArduinoJson.h>
-#include <HTTPClient.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
+#ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
+#include "esp_crt_bundle.h"
+#endif
+#include "esp_http_client.h"
+#include "esp_netif.h"
 
 #include <algorithm>
 #include <cstring>
+#include <ctime>
 #include <vector>
 
 namespace esphome {
@@ -24,6 +27,43 @@ static const int STATUS_LINE_COUNT = 6;
 static const int LINE_CHAR_LIMIT = 32;
 static const int LINE_CHAR_HEAD = 29;
 static const char *BLANK_PLACEHOLDER = "--------";
+
+static bool wifi_sta_has_ip() {
+  esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+  if (netif == nullptr) {
+    return false;
+  }
+  esp_netif_ip_info_t ip{};
+  if (esp_netif_get_ip_info(netif, &ip) != ESP_OK) {
+    return false;
+  }
+  return ip.ip.addr != 0;
+}
+
+static std::string wifi_sta_ip_str() {
+  esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+  if (netif == nullptr) {
+    return "---";
+  }
+  esp_netif_ip_info_t ip{};
+  if (esp_netif_get_ip_info(netif, &ip) != ESP_OK) {
+    return "---";
+  }
+  char buf[16];
+  esp_ip4addr_ntoa(&ip.ip, buf, sizeof(buf));
+  return std::string(buf);
+}
+
+static esp_err_t http_append_body_event(esp_http_client_event_t *evt) {
+  if (evt->event_id != HTTP_EVENT_ON_DATA || evt->data_len <= 0) {
+    return ESP_OK;
+  }
+  auto *body = static_cast<std::string *>(evt->user_data);
+  if (body != nullptr) {
+    body->append(static_cast<const char *>(evt->data), evt->data_len);
+  }
+  return ESP_OK;
+}
 
 int BedsideStatus::gpio_num_(GPIOPin *pin) { return static_cast<InternalGPIOPin *>(pin)->get_pin(); }
 
@@ -143,51 +183,63 @@ void BedsideStatus::status_lines_from_json_(const std::string &json, bool *ok) {
 }
 
 void BedsideStatus::fetch_status_http_() {
-  if (this->status_url_.empty() || WiFi.status() != WL_CONNECTED) {
+  if (this->status_url_.empty() || !wifi_sta_has_ip()) {
     return;
   }
 
-  HTTPClient http;
-  std::unique_ptr<WiFiClientSecure> tls(new WiFiClientSecure());
-  WiFiClient *stream = nullptr;
+  std::string response_body;
+  esp_http_client_config_t cfg{};
+  cfg.url = this->status_url_.c_str();
+  cfg.timeout_ms = 15000;
+  cfg.method = HTTP_METHOD_GET;
+  cfg.event_handler = http_append_body_event;
+  cfg.user_data = &response_body;
+  cfg.buffer_size = 4096;
+  cfg.buffer_size_tx = 1024;
 
-  if (this->status_url_.find("https://") == 0) {
-    if (!this->verify_ssl_) {
-      tls->setInsecure();
+  const bool is_https =
+      this->status_url_.size() >= 8 && this->status_url_.compare(0, 8, "https://") == 0;
+  if (is_https) {
+    if (this->verify_ssl_) {
+#ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
+      cfg.crt_bundle_attach = esp_crt_bundle_attach;
+#endif
+    } else {
+      cfg.crt_bundle_attach = nullptr;
+      cfg.skip_cert_common_name_check = true;
     }
-    stream = tls.get();
   }
 
-  bool ok_http = false;
-  if (stream != nullptr) {
-    ok_http = http.begin(*stream, String(this->status_url_.c_str()));
-  } else {
-    ok_http = http.begin(this->status_url_.c_str());
-  }
-
-  if (!ok_http) {
-    this->lines_[STATUS_LINE_COUNT - 1] = "HTTP begin failed";
+  esp_http_client_handle_t client = esp_http_client_init(&cfg);
+  if (client == nullptr) {
+    this->lines_[STATUS_LINE_COUNT - 1] = "HTTP init failed";
     this->last_fetch_ok_ = false;
     return;
   }
 
-  http.setTimeout(15000);
-  http.addHeader("Accept", "application/json");
-  int code = http.GET();
-  if (code != HTTP_CODE_OK) {
+  esp_http_client_set_header(client, "Accept", "application/json");
+  esp_err_t err = esp_http_client_perform(client);
+  int status = esp_http_client_get_status_code(client);
+  esp_http_client_cleanup(client);
+
+  if (err != ESP_OK) {
+    char ebuf[48];
+    snprintf(ebuf, sizeof(ebuf), "HTTP err 0x%x", static_cast<unsigned>(err));
+    this->lines_[STATUS_LINE_COUNT - 1] = ebuf;
+    this->last_fetch_ok_ = false;
+    return;
+  }
+
+  if (status != 200) {
     char err[48];
-    snprintf(err, sizeof(err), "HTTP %d", code);
+    snprintf(err, sizeof(err), "HTTP %d", status);
     this->lines_[STATUS_LINE_COUNT - 1] = err;
     this->last_fetch_ok_ = false;
-    http.end();
     return;
   }
 
-  String body = http.getString();
-  http.end();
-
   bool parsed_ok = false;
-  this->status_lines_from_json_(body.c_str(), &parsed_ok);
+  this->status_lines_from_json_(response_body, &parsed_ok);
   this->last_fetch_ok_ = parsed_ok;
 }
 
@@ -215,7 +267,7 @@ void BedsideStatus::draw_status_screen_() {
       EPD_ShowString(8, y_positions[i], clipped, this->text_size_, BLACK);
   }
 
-  std::string ip = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString().c_str() : std::string("---");
+  std::string ip = wifi_sta_has_ip() ? wifi_sta_ip_str() : std::string("---");
   clip_line_(ip, clipped, sizeof(clipped));
   std::string clk = format_time_ampm_();
   char time_buf[24];
