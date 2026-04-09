@@ -92,8 +92,8 @@ void BedsideStatus::apply_elecrow_pin_numbers_() {
 
 void BedsideStatus::epd_init_sequence_() {
   EPD_GPIOInit();
-  Paint_NewImage(this->image_bw_, EPD_W, EPD_H, Rotation, WHITE);
-  Paint_Clear(WHITE);
+  Paint_NewImage(this->image_bw_, EPD_W, EPD_H, Rotation, EPD_COLOR_WHITE);
+  Paint_Clear(EPD_COLOR_WHITE);
   EPD_FastMode1Init();
   EPD_Display_Clear();
   EPD_Update();
@@ -283,7 +283,7 @@ void BedsideStatus::fetch_status_http_() {
 }
 
 void BedsideStatus::draw_status_screen_() {
-  Paint_Clear(WHITE);
+  Paint_Clear(EPD_COLOR_WHITE);
 
   static const uint16_t y_positions[6] = {10, 50, 90, 130, 170, 210};
   char clipped[40];
@@ -303,7 +303,7 @@ void BedsideStatus::draw_status_screen_() {
     }
     clip_line_(raw, clipped, sizeof(clipped));
     if (clipped[0] != '\0')
-      EPD_ShowString(8, y_positions[i], clipped, this->text_size_, BLACK);
+      EPD_ShowString(8, y_positions[i], clipped, this->text_size_, EPD_COLOR_BLACK);
   }
 
   std::string ip = wifi_sta_has_ip() ? wifi_sta_ip_str() : std::string("---");
@@ -317,19 +317,19 @@ void BedsideStatus::draw_status_screen_() {
   const uint16_t cw = fs / 2;
 
   if (this->footer_ip_left_) {
-    EPD_ShowString(8, fy, clipped, fs, BLACK);
+    EPD_ShowString(8, fy, clipped, fs, EPD_COLOR_BLACK);
     uint16_t tw = static_cast<uint16_t>(strlen(time_buf)) * cw;
     uint16_t tx = static_cast<uint16_t>(EPD_W - 8 - tw);
     if (tx < 8)
       tx = 8;
-    EPD_ShowString(tx, fy, time_buf, fs, BLACK);
+    EPD_ShowString(tx, fy, time_buf, fs, EPD_COLOR_BLACK);
   } else {
-    EPD_ShowString(8, fy, time_buf, fs, BLACK);
+    EPD_ShowString(8, fy, time_buf, fs, EPD_COLOR_BLACK);
     uint16_t iw = static_cast<uint16_t>(strlen(clipped)) * cw;
     uint16_t ix = static_cast<uint16_t>(EPD_W - 8 - iw);
     if (ix < 8)
       ix = 8;
-    EPD_ShowString(ix, fy, clipped, fs, BLACK);
+    EPD_ShowString(ix, fy, clipped, fs, EPD_COLOR_BLACK);
   }
 
   EPD_Display(this->image_bw_);

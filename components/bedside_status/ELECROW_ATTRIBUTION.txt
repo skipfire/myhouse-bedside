@@ -9,5 +9,5 @@ Vendored files (under components/bedside_status/):
 Modified for ESPHome:
   spi.h — GPIO numbers are runtime-configurable (extern ints + defaults).
 
-JSON parsing uses cJSON v1.7.18 (MIT), bundled as cjson_upstream.c + bedside_cjson.cpp.
+JSON parsing uses cJSON v1.7.18 (MIT), bundled as cjson_upstream.inc (included by bedside_cjson.cpp).
   https://github.com/DaveGamble/cJSON

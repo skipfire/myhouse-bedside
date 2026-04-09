@@ -1,0 +1,14 @@
+ESPHome + framework esp-idf (default in recent ESPHome for ESP32)
+
+The bedside_status component uses ESP-IDF's esp_http_client. You must expose that
+built-in component to the app, or the build fails with:
+
+  fatal error: esp_http_client.h: No such file or directory
+
+Add under esp32 -> framework:
+
+  advanced:
+    include_builtin_idf_components:
+      - esp_http_client
+
+See ESPHome changelog 2026.2.0 and esphome/esphome#13610.

@@ -108,7 +108,7 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
     }
 		Addr=X/8+Y*Paint.widthByte;
     Rdata=Paint.Image[Addr];
-    if(Color==BLACK)
+    if (Color == EPD_COLOR_BLACK)
     {    
 			Paint.Image[Addr]=Rdata&~(0x80>>(X % 8)); //Corresponding data position 0
 		}

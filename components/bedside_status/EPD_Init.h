@@ -12,8 +12,9 @@
 #define EPD_W	800
 #define EPD_H	272
 
-#define WHITE 0xFF
-#define BLACK 0x00
+/* Renamed from WHITE/BLACK to avoid clashing with esphome::Color::WHITE / ::BLACK macros in color.h */
+#define EPD_COLOR_WHITE 0xFF
+#define EPD_COLOR_BLACK 0x00
 
 #define ALLSCREEN_GRAGHBYTES  27200/2
 
