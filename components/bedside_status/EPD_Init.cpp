@@ -290,6 +290,104 @@ void EPD_Display(const uint8_t *ImageBW)
   }
 }
 
+/* --- Bukys / MicroPython crowpanel579_epd.display_bitmap (792-wide linear buffer) --- */
+
+#define BUKYS_BUF_BYTES ((792u * (uint32_t) Gate_BITS) / 8u)
+#define BUKYS_ROW_BYTES (792u / 8u)
+#define ELECROW_ROW_BYTES (EPD_W / 8u)
+
+static void EPD_SetRAMMP_Bukys(void)
+{
+  EPD_WR_REG(0x11);
+  EPD_WR_DATA8(0x02);
+  EPD_WR_REG(0x44);
+  EPD_WR_DATA8(0x31);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_REG(0x45);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x0F);
+  EPD_WR_DATA8(0x01);
+}
+
+static void EPD_SetRAMMA_Bukys(void)
+{
+  EPD_WR_REG(0x4E);
+  EPD_WR_DATA8(0x31);
+  EPD_WR_REG(0x4F);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+}
+
+static void EPD_SetRAMSP_Bukys(void)
+{
+  EPD_WR_REG(0x91);
+  EPD_WR_DATA8(0x03);
+  EPD_WR_REG(0xC4);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x31);
+  EPD_WR_REG(0xC5);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x0F);
+  EPD_WR_DATA8(0x01);
+}
+
+static void EPD_SetRAMSA_Bukys(void)
+{
+  EPD_WR_REG(0xCE);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_REG(0xCF);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+}
+
+static uint8_t epd_byte_visible792_from_800buf(const uint8_t *img, uint32_t linear792)
+{
+  uint32_t row = linear792 / BUKYS_ROW_BYTES;
+  uint32_t col = linear792 % BUKYS_ROW_BYTES;
+  if (row >= (uint32_t) Gate_BITS) {
+    return 0xFF;
+  }
+  return img[row * ELECROW_ROW_BYTES + col];
+}
+
+void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
+{
+  uint32_t pos = 0;
+  uint8_t chunk[50];
+
+  EPD_SetRAMMP_Bukys();
+  EPD_SetRAMMA_Bukys();
+  EPD_SetRAMSP_Bukys();
+  EPD_SetRAMSA_Bukys();
+
+  while (pos < BUKYS_BUF_BYTES) {
+    if (pos + 50 > BUKYS_BUF_BYTES) {
+      break;
+    }
+    for (int i = 0; i < 50; i++) {
+      chunk[i] = epd_byte_visible792_from_800buf(image_bw800, pos + (uint32_t) i);
+    }
+    EPD_WR_REG(0xA4);
+    for (int i = 0; i < 50; i++) {
+      EPD_WR_DATA8(chunk[i]);
+    }
+    pos += 49;
+    if (pos + 50 > BUKYS_BUF_BYTES) {
+      break;
+    }
+    for (int i = 0; i < 50; i++) {
+      chunk[i] = epd_byte_visible792_from_800buf(image_bw800, pos + (uint32_t) i);
+    }
+    EPD_WR_REG(0x24);
+    for (int i = 0; i < 50; i++) {
+      EPD_WR_DATA8(chunk[i]);
+    }
+    pos += 50;
+  }
+}
+
 //Horizontal scanning, from right to left, from bottom to top
 void EPD_WhiteScreen_ALL_Fast(const unsigned char *datas)
 {

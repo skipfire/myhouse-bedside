@@ -18,6 +18,8 @@ that moved cJSON into cjson_upstream.c, use ESPHome "Clean Build Files" once so 
 regenerates the source list. A minimal bedside_cjson.cpp is kept in the repo to avoid
 that failure on stale Ninja rules.
 
-bedside_status: repeat partial refresh is epd_partial_passes (1–5, default 1; raise to 2–3 if ink is weak).
+bedside_status: framebuffer is pushed with the same Bukys 792-wide interleaved SPI sequence as
+MicroPython crowpanel579_epd.display_bitmap (not Elecrow EPD_Display). epd_partial_passes (1–5,
+default 1) repeats partial refresh only; weak text was mainly the wrong RAM upload, not pass count.
 If YAML says that option is invalid, the add-on is using an old copy of the external
 component — set external_components refresh (e.g. 1h) or reinstall/update the git ref.

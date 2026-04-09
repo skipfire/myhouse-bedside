@@ -65,7 +65,7 @@ class BedsideStatus : public PollingComponent {
   uint16_t text_size_{24};
   /** Match MicroPython bedside_render (scale=3): use 24 with double-width 2412 font. */
   uint16_t footer_text_size_{24};
-  /** Repeat EPD_Display + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
+  /** Repeat bitmap push + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
   uint8_t display_passes_{1};
 
   uint8_t image_bw_[27200]{};

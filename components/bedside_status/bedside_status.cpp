@@ -404,7 +404,8 @@ void BedsideStatus::draw_status_screen_() {
 
   const uint8_t passes = this->display_passes_ == 0 ? 1 : this->display_passes_;
   for (uint8_t p = 0; p < passes; p++) {
-    EPD_Display(this->image_bw_);
+    /* Elecrow EPD_Display targets a different RAM map than this panel; MicroPython uses Bukys interleave. */
+    EPD_DisplayBukys792From800(this->image_bw_);
     EPD_PartUpdate();
     if (p + 1 < passes) {
       bedside_delay_ms(30);
