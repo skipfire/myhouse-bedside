@@ -6,13 +6,13 @@ AUTO_LOAD = []
 DEPENDENCIES = []
 
 bedside_status_ns = cg.esphome_ns.namespace("bedside_status")
-BedsideStatus = bedside_status_ns.class_("BedsideStatus", cg.Component)
+BedsideStatus = bedside_status_ns.class_("BedsideStatus", cg.PollingComponent)
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(BedsideStatus),
-}).extend(cv.COMPONENT_SCHEMA)
+}).extend(cv.polling_component_schema("5s"))
 
 
-def to_code(config):
+async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    yield cg.register_component(var, config)
+    await cg.register_component(var, config)
