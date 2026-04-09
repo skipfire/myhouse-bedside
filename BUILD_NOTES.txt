@@ -12,3 +12,8 @@ Add under esp32 -> framework:
       - esp_http_client
 
 See ESPHome changelog 2026.2.0 and esphome/esphome#13610.
+
+If compile fails with bedside_cjson.cpp "not found" after pulling a newer component
+that moved cJSON into cjson_upstream.c, use ESPHome "Clean Build Files" once so CMake
+regenerates the source list. A minimal bedside_cjson.cpp is kept in the repo to avoid
+that failure on stale Ninja rules.
