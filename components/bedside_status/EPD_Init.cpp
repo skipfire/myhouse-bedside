@@ -2,6 +2,7 @@
 #include "EPD.h"
 
 #include "esp_timer.h"
+#include "esp_task_wdt.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -355,6 +356,7 @@ static uint8_t epd_byte_visible792_from_800buf(const uint8_t *img, uint32_t line
 void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
 {
   uint32_t pos = 0;
+  uint32_t pair_n = 0;
   /* Static: large setup stack + font drawing; avoid stack pressure on ESPHome loop task. */
   static uint8_t chunk[50];
 
@@ -382,8 +384,13 @@ void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
     EPD_WR_REG(0x24);
     EPD_WR_DATA_BURST(chunk, 50);
     pos += 50;
-    /* Long bit-bang without yield has faulted gpio_set_level on ESP32-S3 (task/idle WDT stress). */
+    /* Long bit-bang can trip ESP32-S3 task/idle WDT (crash BT often ends in prvIdleTask). */
     taskYIELD();
+    (void) esp_task_wdt_reset();
+    pair_n++;
+    if ((pair_n & 15u) == 0u) {
+      vTaskDelay(pdMS_TO_TICKS(1));
+    }
   }
 }
 

@@ -72,6 +72,8 @@ class BedsideStatus : public PollingComponent {
   std::string lines_[6];
   bool last_fetch_ok_{true};
   uint32_t last_partial_ms_{0};
+  /** First full paint runs from loop(), not setup(), so ESPHome setup/TWDT are not blocked by long SPI. */
+  bool pending_first_epd_draw_{true};
 
   static int gpio_num_(GPIOPin *pin);
 };

@@ -447,12 +447,17 @@ void BedsideStatus::setup() {
   this->lines_[0] = "ESPHome";
   this->lines_[1] = "Bedside status";
   this->lines_[2] = "Waiting for data";
-  this->draw_status_screen_();
 
-  ESP_LOGI(TAG, "Elecrow EPD initialized");
+  ESP_LOGI(TAG, "Elecrow EPD initialized (first frame on next loop)");
 }
 
 void BedsideStatus::loop() {
+  if (this->pending_first_epd_draw_) {
+    this->pending_first_epd_draw_ = false;
+    this->last_partial_ms_ = bedside_millis();
+    this->draw_status_screen_();
+    return;
+  }
   uint32_t now = bedside_millis();
   uint32_t interval = this->last_fetch_ok_ ? 500u : 5000u;
   if (now - this->last_partial_ms_ < interval)
