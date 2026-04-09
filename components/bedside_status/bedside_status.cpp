@@ -392,8 +392,14 @@ void BedsideStatus::draw_status_screen_() {
     epd_draw_string_sized(ix, fy, clipped, fs, EPD_COLOR_BLACK);
   }
 
-  EPD_Display(this->image_bw_);
-  EPD_PartUpdate();
+  const uint8_t passes = this->display_passes_ == 0 ? 1 : this->display_passes_;
+  for (uint8_t p = 0; p < passes; p++) {
+    EPD_Display(this->image_bw_);
+    EPD_PartUpdate();
+    if (p + 1 < passes) {
+      bedside_delay_ms(30);
+    }
+  }
 }
 
 void BedsideStatus::setup() {
@@ -457,6 +463,7 @@ void BedsideStatus::dump_config() {
   ESP_LOGCONFIG(TAG, "  Status URL: %s", this->status_url_.c_str());
   ESP_LOGCONFIG(TAG, "  Verify SSL: %s", this->verify_ssl_ ? "yes" : "no");
   ESP_LOGCONFIG(TAG, "  DisplayStatus filter: %d", this->display_status_filter_);
+  ESP_LOGCONFIG(TAG, "  EPD display passes: %u", this->display_passes_);
   LOG_UPDATE_INTERVAL(this);
 }
 
