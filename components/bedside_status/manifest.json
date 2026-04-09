@@ -1,0 +1,7 @@
+{
+  "domain": "bedside_status",
+  "name": "MyHouse Bedside Status",
+  "version": "0.0.1",
+  "dependencies": [],
+  "codeowners": []
+}
