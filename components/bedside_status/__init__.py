@@ -46,9 +46,9 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_DISPLAY_STATUS_FILTER, default=3): cv.int_range(min=0, max=255),
         cv.Optional(CONF_TEXT_SIZE, default=24): cv.int_range(min=12, max=48),
         cv.Optional(CONF_FOOTER_TEXT_SIZE, default=24): cv.int_range(min=8, max=48),
-        cv.Optional(CONF_EPD_PARTIAL_PASSES, default=1): cv.int_range(min=1, max=5),
-        cv.Optional(CONF_EPD_FULL_REFRESH_ON_BOOT, default=False): cv.boolean,
-        cv.Optional(CONF_EPD_FULL_REFRESH_EVERY_MIN, default=0): cv.int_range(min=0, max=44640),
+        cv.Optional(CONF_EPD_PARTIAL_PASSES, default=2): cv.int_range(min=1, max=5),
+        cv.Optional(CONF_EPD_FULL_REFRESH_ON_BOOT, default=True): cv.boolean,
+        cv.Optional(CONF_EPD_FULL_REFRESH_EVERY_MIN, default=120): cv.int_range(min=0, max=44640),
         cv.Optional(CONF_TIME_ID): cv.use_id(time_comp.RealTimeClock),
     }
 ).extend(cv.polling_component_schema("5s"))

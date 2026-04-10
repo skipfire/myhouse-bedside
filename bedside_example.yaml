@@ -52,9 +52,9 @@ bedside_status:
   verify_ssl: true
   footer_ip_left: true
   display_status_filter: 3
-  # Normal draws use partial (0xDC) — no full flash. Full (0xF7) is slow and blinks the whole panel.
-  # epd_full_refresh_on_boot: true   # one solid baseline after boot
-  # epd_full_refresh_every_minutes: 120  # optional periodic full (ghosting cleanup)
-  epd_partial_passes: 1
+  # Defaults: full refresh on first paint + every 120 min (darker ink); between that, 2× partial/stack.
+  # epd_full_refresh_on_boot: false
+  # epd_full_refresh_every_minutes: 0   # disable periodic full flash (thinner partial-only text)
+  # epd_partial_passes: 3
   time_id: ha_time
   update_interval: 5s

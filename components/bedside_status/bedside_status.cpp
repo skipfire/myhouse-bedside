@@ -475,16 +475,16 @@ void BedsideStatus::setup() {
 void BedsideStatus::loop() {
   if (this->pending_first_epd_draw_) {
     this->pending_first_epd_draw_ = false;
-    this->last_partial_ms_ = bedside_millis();
     this->draw_status_screen_();
+    this->last_partial_ms_ = bedside_millis();
     return;
   }
   uint32_t now = bedside_millis();
   uint32_t interval = this->last_fetch_ok_ ? 500u : 5000u;
   if (now - this->last_partial_ms_ < interval)
     return;
-  this->last_partial_ms_ = now;
   this->draw_status_screen_();
+  this->last_partial_ms_ = bedside_millis();
 }
 
 void BedsideStatus::update() { this->fetch_status_http_(); }
