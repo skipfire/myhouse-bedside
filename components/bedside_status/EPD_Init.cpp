@@ -297,13 +297,7 @@ void EPD_Display(const uint8_t *ImageBW)
 #define BUKYS_ROW_BYTES (792u / 8u)
 #define ELECROW_ROW_BYTES (EPD_W / 8u)
 
-static inline void epd_wr_y9(uint16_t y)
-{
-  EPD_WR_DATA8(static_cast<uint8_t>(y & 0xFFu));
-  EPD_WR_DATA8(static_cast<uint8_t>((y >> 8) & 0x01u));
-}
-
-static void EPD_SetRAMMP_Bukys_YWindow(uint16_t gate_y0, uint16_t gate_y1)
+static void EPD_SetRAMMP_Bukys(void)
 {
   EPD_WR_REG(0x11);
   EPD_WR_DATA8(0x02);
@@ -311,23 +305,22 @@ static void EPD_SetRAMMP_Bukys_YWindow(uint16_t gate_y0, uint16_t gate_y1)
   EPD_WR_DATA8(0x31);
   EPD_WR_DATA8(0x00);
   EPD_WR_REG(0x45);
-  epd_wr_y9(gate_y0);
-  epd_wr_y9(gate_y1);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x0F);
+  EPD_WR_DATA8(0x01);
 }
 
-static void EPD_SetRAMMP_Bukys(void) { EPD_SetRAMMP_Bukys_YWindow(0, static_cast<uint16_t>(Gate_BITS - 1)); }
-
-static void EPD_SetRAMMA_Bukys_At(uint8_t x_byte, uint16_t gate_y)
+static void EPD_SetRAMMA_Bukys(void)
 {
   EPD_WR_REG(0x4E);
-  EPD_WR_DATA8(x_byte);
+  EPD_WR_DATA8(0x31);
   EPD_WR_REG(0x4F);
-  epd_wr_y9(gate_y);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
 }
 
-static void EPD_SetRAMMA_Bukys(void) { EPD_SetRAMMA_Bukys_At(0x31, 0); }
-
-static void EPD_SetRAMSP_Bukys_YWindow(uint16_t gate_y0, uint16_t gate_y1)
+static void EPD_SetRAMSP_Bukys(void)
 {
   EPD_WR_REG(0x91);
   EPD_WR_DATA8(0x03);
@@ -335,24 +328,20 @@ static void EPD_SetRAMSP_Bukys_YWindow(uint16_t gate_y0, uint16_t gate_y1)
   EPD_WR_DATA8(0x00);
   EPD_WR_DATA8(0x31);
   EPD_WR_REG(0xC5);
-  epd_wr_y9(gate_y0);
-  epd_wr_y9(gate_y1);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x0F);
+  EPD_WR_DATA8(0x01);
 }
 
-static void EPD_SetRAMSP_Bukys(void)
-{
-  EPD_SetRAMSP_Bukys_YWindow(0, static_cast<uint16_t>(Gate_BITS - 1));
-}
-
-static void EPD_SetRAMSA_Bukys_At(uint8_t x_byte, uint16_t gate_y)
+static void EPD_SetRAMSA_Bukys(void)
 {
   EPD_WR_REG(0xCE);
-  EPD_WR_DATA8(x_byte);
+  EPD_WR_DATA8(0x00);
   EPD_WR_REG(0xCF);
-  epd_wr_y9(gate_y);
+  EPD_WR_DATA8(0x00);
+  EPD_WR_DATA8(0x00);
 }
-
-static void EPD_SetRAMSA_Bukys(void) { EPD_SetRAMSA_Bukys_At(0x00, 0); }
 
 static uint8_t reverse_bits_u8(uint8_t b)
 {
@@ -376,13 +365,19 @@ static uint8_t epd_byte_visible792_from_800buf(const uint8_t *img, uint32_t line
   return reverse_bits_u8(img[row * ELECROW_ROW_BYTES + col]);
 }
 
-static void epd_bukys_stream_pos_range(const uint8_t *image_bw800, uint32_t pos, uint32_t end_pos)
+void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
 {
+  uint32_t pos = 0;
   /* Static: large setup stack + font drawing; avoid stack pressure on ESPHome loop task. */
   static uint8_t chunk[50];
 
-  while (pos < end_pos) {
-    if (pos + 50 > end_pos) {
+  EPD_SetRAMMP_Bukys();
+  EPD_SetRAMMA_Bukys();
+  EPD_SetRAMSP_Bukys();
+  EPD_SetRAMSA_Bukys();
+
+  while (pos < BUKYS_BUF_BYTES) {
+    if (pos + 50 > BUKYS_BUF_BYTES) {
       break;
     }
     for (int i = 0; i < 50; i++) {
@@ -391,7 +386,7 @@ static void epd_bukys_stream_pos_range(const uint8_t *image_bw800, uint32_t pos,
     EPD_WR_REG(0xA4);
     EPD_WR_DATA_BURST(chunk, 50);
     pos += 49;
-    if (pos + 50 > end_pos) {
+    if (pos + 50 > BUKYS_BUF_BYTES) {
       break;
     }
     for (int i = 0; i < 50; i++) {
@@ -404,41 +399,6 @@ static void epd_bukys_stream_pos_range(const uint8_t *image_bw800, uint32_t pos,
     taskYIELD();
     (void) esp_task_wdt_reset();
   }
-}
-
-void EPD_DisplayBukys792From800(const uint8_t *image_bw800)
-{
-  EPD_SetRAMMP_Bukys();
-  EPD_SetRAMMA_Bukys();
-  EPD_SetRAMSP_Bukys();
-  EPD_SetRAMSA_Bukys();
-  epd_bukys_stream_pos_range(image_bw800, 0, BUKYS_BUF_BYTES);
-}
-
-void EPD_DisplayBukys792From800_YBand(const uint8_t *image_bw800, uint16_t paint_y0, uint16_t paint_y1_inclusive)
-{
-  if (paint_y0 > paint_y1_inclusive) {
-    return;
-  }
-  const uint16_t gh = static_cast<uint16_t>(Gate_BITS);
-  if (paint_y0 >= gh) {
-    return;
-  }
-  if (paint_y1_inclusive >= gh) {
-    paint_y1_inclusive = gh - 1;
-  }
-  /* Bukys stream row_b order: row_b=0 is bottom (paint y=gh-1); see epd_byte_visible792_from_800buf. */
-  const uint16_t gate_y0 = static_cast<uint16_t>((gh - 1u) - paint_y1_inclusive);
-  const uint16_t gate_y1 = static_cast<uint16_t>((gh - 1u) - paint_y0);
-
-  EPD_SetRAMMP_Bukys_YWindow(gate_y0, gate_y1);
-  EPD_SetRAMMA_Bukys_At(0x31, gate_y0);
-  EPD_SetRAMSP_Bukys_YWindow(gate_y0, gate_y1);
-  EPD_SetRAMSA_Bukys_At(0x00, gate_y0);
-
-  const uint32_t pos0 = static_cast<uint32_t>(gate_y0) * BUKYS_ROW_BYTES;
-  const uint32_t end_pos = static_cast<uint32_t>(gate_y1 + 1u) * BUKYS_ROW_BYTES;
-  epd_bukys_stream_pos_range(image_bw800, pos0, end_pos);
 }
 
 //Horizontal scanning, from right to left, from bottom to top

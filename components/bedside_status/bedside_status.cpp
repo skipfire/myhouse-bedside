@@ -343,20 +343,6 @@ void BedsideStatus::draw_status_screen_() {
     }
   }
 
-  uint16_t status_band_y0[STATUS_LINE_COUNT];
-  uint16_t status_band_y1[STATUS_LINE_COUNT];
-  for (int i = 0; i < STATUS_LINE_COUNT; i++) {
-    const uint16_t slot_top = static_cast<uint16_t>(STATUS_TOP_MARGIN + static_cast<uint16_t>(i) * pitch);
-    status_band_y0[i] = slot_top;
-    uint16_t y1 = static_cast<uint16_t>(slot_top + pitch - 1);
-    if (y1 >= footer_y0) {
-      y1 = static_cast<uint16_t>(footer_y0 > 0 ? footer_y0 - 1 : 0);
-    }
-    status_band_y1[i] = y1;
-  }
-  const uint16_t footer_band_y0 = footer_y0;
-  const uint16_t footer_band_y1 = static_cast<uint16_t>(EPD_H - 1);
-
   char clipped[40];
 
   for (int i = 0; i < STATUS_LINE_COUNT; i++) {
@@ -440,11 +426,7 @@ void BedsideStatus::draw_status_screen_() {
   } else {
     const uint8_t passes = this->display_passes_ == 0 ? 1 : this->display_passes_;
     for (uint8_t p = 0; p < passes; p++) {
-      for (int i = 0; i < STATUS_LINE_COUNT; i++) {
-        EPD_DisplayBukys792From800_YBand(this->image_bw_, status_band_y0[i], status_band_y1[i]);
-        EPD_PartUpdate();
-      }
-      EPD_DisplayBukys792From800_YBand(this->image_bw_, footer_band_y0, footer_band_y1);
+      EPD_DisplayBukys792From800(this->image_bw_);
       EPD_PartUpdate();
       if (p + 1 < passes) {
         bedside_delay_ms(30);
