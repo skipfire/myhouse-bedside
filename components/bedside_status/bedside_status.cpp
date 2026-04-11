@@ -360,6 +360,7 @@ void BedsideStatus::draw_status_screen_() {
     }
     clip_line_(raw, clipped, sizeof(clipped));
     if (clipped[0] != '\0') {
+      ESP_LOGD(TAG, "Drawing status line %d: '%s'", i, clipped);
       const uint16_t slot_top = static_cast<uint16_t>(STATUS_TOP_MARGIN + static_cast<uint16_t>(i) * pitch);
       uint16_t y_text = slot_top;
       if (pitch > gh) {
@@ -374,6 +375,8 @@ void BedsideStatus::draw_status_screen_() {
   std::string clk = format_time_ampm_();
   char time_buf[24];
   clip_line_(clk, time_buf, sizeof(time_buf));
+
+  ESP_LOGD(TAG, "Drawing footer IP: '%s', Time: '%s'", clipped, time_buf);
 
   const uint16_t fs = this->footer_text_size_;
   const uint16_t fgh = elecrow_glyph_height(fs);
