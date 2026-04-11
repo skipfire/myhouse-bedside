@@ -52,7 +52,8 @@ bedside_status:
   verify_ssl: true
   footer_ip_left: true
   display_status_filter: 3
-  # Defaults: full refresh on first paint + every 120 min (darker ink); between that, 2× partial/stack.
+  # Defaults: full on first paint + every 120 min; between that, epd_partial_passes sequences of
+  # 7 partial updates (one 0xDC per status row + footer band) for clearer static text.
   # epd_full_refresh_on_boot: false
   # epd_full_refresh_every_minutes: 0   # disable periodic full flash (thinner partial-only text)
   # epd_partial_passes: 3

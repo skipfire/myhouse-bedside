@@ -42,5 +42,7 @@ void EPD_Display(const uint8_t *ImageBW);
 /** CrowPanel 5.79 inch visible area: same SPI sequence as MicroPython crowpanel579_epd.display_bitmap
  *  (Ignas Bukys interleave). Image is 800x272 row-major (100 B/row); left 792 columns (99 B/row) are sent. */
 void EPD_DisplayBukys792From800(const uint8_t *image_bw800);
+/** Partial Bukys upload + same A4/0x24 interleave as full display, limited to inclusive paint Y (0=top). */
+void EPD_DisplayBukys792From800_YBand(const uint8_t *image_bw800, uint16_t paint_y0, uint16_t paint_y1_inclusive);
 void EPD_WhiteScreen_ALL_Fast(const unsigned char *datas);
 #endif
