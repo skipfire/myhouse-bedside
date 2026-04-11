@@ -94,9 +94,7 @@ void Paint_SetPixel(uint16_t Xpoint,uint16_t Ypoint,uint16_t Color)
 				  if (Xpoint >= EPD_VISIBLE_W || Ypoint >= Paint.heightMemory) {
 				    return;
 				  }
-				  if (Xpoint >= 396) {
-				    Xpoint += 8;
-				  }
+				  // Removed +8 offset as EPD_DisplayBukys792From800 handles seam interleave
 				  X = static_cast<uint16_t>(Paint.widthMemory - Xpoint - 1);
 				  Y = static_cast<uint16_t>(Paint.heightMemory - Ypoint - 1);
 				  break;
