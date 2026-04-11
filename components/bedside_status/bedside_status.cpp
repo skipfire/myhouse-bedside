@@ -419,6 +419,15 @@ void BedsideStatus::draw_status_screen_() {
     }
   }
 
+  if (!this->epd_early_full_refresh_done_ && this->first_successful_fetch_ms_ > 0) {
+    const uint32_t elapsed = now_ms - this->first_successful_fetch_ms_;
+    if (elapsed >= 15000) {
+      use_full_waveform = true;
+      this->epd_early_full_refresh_done_ = true;
+      this->last_full_epd_refresh_ms_ = now_ms;
+    }
+  }
+
   /* Full (0xF7) flashes the whole panel — only on boot/interval. Normal draws use partial (0xDC). */
   if (use_full_waveform) {
     EPD_DisplayBukys792From800(this->image_bw_);
@@ -487,7 +496,12 @@ void BedsideStatus::loop() {
   this->last_partial_ms_ = bedside_millis();
 }
 
-void BedsideStatus::update() { this->fetch_status_http_(); }
+void BedsideStatus::update() {
+  this->fetch_status_http_();
+  if (this->last_fetch_ok_ && this->first_successful_fetch_ms_ == 0) {
+    this->first_successful_fetch_ms_ = bedside_millis();
+  }
+}
 
 void BedsideStatus::dump_config() {
   ESP_LOGCONFIG(TAG, "MyHouse bedside status");

@@ -75,6 +75,8 @@ class BedsideStatus : public PollingComponent {
   uint32_t epd_full_refresh_interval_ms_{120UL * 60UL * 1000UL};
   bool epd_boot_full_refresh_done_{false};
   uint32_t last_full_epd_refresh_ms_{0};
+  bool epd_early_full_refresh_done_{false};
+  uint32_t first_successful_fetch_ms_{0};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];
