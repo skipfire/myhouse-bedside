@@ -448,6 +448,22 @@ void BedsideStatus::draw_status_screen_() {
       }
     }
   }
+
+  // Publish display text to sensor
+  if (this->display_text_sensor_ != nullptr) {
+    std::string full_text;
+    for (int i = 0; i < STATUS_LINE_COUNT; i++) {
+      full_text += this->lines_[i];
+      if (i < STATUS_LINE_COUNT - 1) full_text += "\n";
+    }
+    std::string ip = wifi_sta_has_ip() ? wifi_sta_ip_str() : std::string("---");
+    if (!ip.empty() && ip != "---") {
+      ip += "-" + this->device_name_ + " ";
+    }
+    std::string time_str = format_time_ampm_();
+    full_text += "\n" + ip + "  " + time_str;
+    this->display_text_sensor_->publish_state(full_text);
+  }
 }
 
 void BedsideStatus::setup() {

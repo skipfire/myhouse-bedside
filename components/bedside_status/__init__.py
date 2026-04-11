@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
-from esphome.components import time as time_comp
+from esphome.components import time as time_comp, text_sensor
 from esphome.const import CONF_ID
 
 CONF_TIME_ID = "time_id"
@@ -29,6 +29,7 @@ CONF_FOOTER_TEXT_SIZE = "footer_text_size"
 CONF_EPD_PARTIAL_PASSES = "epd_partial_passes"
 CONF_EPD_FULL_REFRESH_ON_BOOT = "epd_full_refresh_on_boot"
 CONF_EPD_FULL_REFRESH_EVERY_MIN = "epd_full_refresh_every_minutes"
+CONF_DISPLAY_TEXT_SENSOR = "display_text_sensor"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -50,6 +51,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_EPD_FULL_REFRESH_ON_BOOT, default=True): cv.boolean,
         cv.Optional(CONF_EPD_FULL_REFRESH_EVERY_MIN, default=120): cv.int_range(min=0, max=44640),
         cv.Optional(CONF_TIME_ID): cv.use_id(time_comp.RealTimeClock),
+        cv.Optional(CONF_DISPLAY_TEXT_SENSOR): cv.use_id(text_sensor.TextSensor),
     }
 ).extend(cv.polling_component_schema("5s"))
 
@@ -85,6 +87,9 @@ async def to_code(config):
             int(config[CONF_EPD_FULL_REFRESH_EVERY_MIN]) * 60 * 1000
         )
     )
+
+    if CONF_DISPLAY_TEXT_SENSOR in config:
+        cg.add(var.set_display_text_sensor(await cg.get_variable(config[CONF_DISPLAY_TEXT_SENSOR])))
 
     if CONF_TIME_ID in config:
         t = await cg.get_variable(config[CONF_TIME_ID])

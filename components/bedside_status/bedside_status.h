@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/components/time/real_time_clock.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 
 #include <string>
 
@@ -36,6 +37,7 @@ class BedsideStatus : public PollingComponent {
   void set_display_passes(uint8_t v) { this->display_passes_ = v; }
   void set_epd_full_refresh_on_boot(bool v) { this->epd_full_refresh_on_boot_ = v; }
   void set_epd_full_refresh_interval_ms(uint32_t v) { this->epd_full_refresh_interval_ms_ = v; }
+  void set_display_text_sensor(text_sensor::TextSensor *sensor) { this->display_text_sensor_ = sensor; }
 
  private:
   static BedsideStatus *epd_busy_parent_;
@@ -78,6 +80,7 @@ class BedsideStatus : public PollingComponent {
   bool epd_early_full_refresh_done_{false};
   uint32_t first_successful_fetch_ms_{0};
   std::string device_name_;
+  text_sensor::TextSensor *display_text_sensor_{nullptr};
 
   uint8_t image_bw_[27200]{};
   std::string lines_[6];
