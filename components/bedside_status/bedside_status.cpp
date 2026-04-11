@@ -179,12 +179,11 @@ std::string BedsideStatus::format_time_ampm_() {
     m = lt.tm_min;
     s = lt.tm_sec;
   }
-  bool pm = h >= 12;
   uint8_t h12 = h % 12;
   if (h12 == 0)
     h12 = 12;
   char buf[20];
-  snprintf(buf, sizeof(buf), "%u:%02u:%02u %s", h12, m, s, pm ? "PM" : "AM");
+  snprintf(buf, sizeof(buf), "%u:%02u:%02u", h12, m, s);
   return std::string(buf);
 }
 
