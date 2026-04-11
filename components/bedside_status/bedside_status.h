@@ -68,7 +68,7 @@ class BedsideStatus : public PollingComponent {
   /** Match MicroPython bedside_render (scale=3): use 24 with double-width 2412 font. */
   uint16_t footer_text_size_{24};
   /** Repeat bitmap push + EPD_PartUpdate (strengthens partial refresh; each pass ~1s+ BUSY). */
-  uint8_t display_passes_{3};
+  uint8_t display_passes_{2};
   /** One full refresh (0xF7) on first paint after boot; then partial unless interval hits. */
   bool epd_full_refresh_on_boot_{true};
   /** If >0, run full refresh (0xF7) when this many ms have passed since last full (~5s+ each). */
