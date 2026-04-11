@@ -5,6 +5,7 @@
 
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
+#include "esphome/core/application.h"
 
 #include "cJSON.h"
 #ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
@@ -371,6 +372,9 @@ void BedsideStatus::draw_status_screen_() {
   }
 
   std::string ip = wifi_sta_has_ip() ? wifi_sta_ip_str() : std::string("---");
+  if (!ip.empty() && ip != "---") {
+    ip += "-" + this->device_name_;
+  }
   clip_line_(ip, clipped, sizeof(clipped));
   std::string clk = format_time_ampm_();
   char time_buf[24];
@@ -481,6 +485,8 @@ void BedsideStatus::setup() {
   this->lines_[0] = "ESPHome";
   this->lines_[1] = "Bedside status";
   this->lines_[2] = "Waiting for data";
+
+  this->device_name_ = App.get_name();
 
 }
 
