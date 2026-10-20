@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
-from esphome.components import time as time_comp, text_sensor
+from esphome.components import esp32, time as time_comp, text_sensor
 from esphome.const import CONF_ID
 
 CONF_TIME_ID = "time_id"
@@ -76,6 +76,18 @@ async def to_code(config):
 
     cg.add(var.set_status_url(config[CONF_STATUS_URL]))
     cg.add(var.set_verify_ssl(config[CONF_VERIFY_SSL]))
+    # Since ESPHome 2026.9 the mbedTLS certificate bundle is compiled only when a
+    # component requests it; without it, verify_ssl leaves esp-tls with no
+    # verification method and every HTTPS connect fails (ESP_ERR_HTTP_CONNECT).
+    if config[CONF_STATUS_URL].startswith("https://"):
+        if config[CONF_VERIFY_SSL]:
+            if hasattr(esp32, "require_certificate_bundle"):
+                esp32.require_certificate_bundle()
+            else:  # older ESPHome: bundle was on by default; make sure
+                esp32.add_idf_sdkconfig_option("CONFIG_MBEDTLS_CERTIFICATE_BUNDLE", True)
+        else:
+            esp32.add_idf_sdkconfig_option("CONFIG_ESP_TLS_INSECURE", True)
+            esp32.add_idf_sdkconfig_option("CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY", True)
     cg.add(var.set_footer_ip_left(config[CONF_FOOTER_IP_LEFT]))
     cg.add(var.set_display_status_filter(config[CONF_DISPLAY_STATUS_FILTER]))
     cg.add(var.set_text_size(config[CONF_TEXT_SIZE]))

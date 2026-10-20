@@ -288,6 +288,8 @@ void BedsideStatus::fetch_status_http_() {
     if (this->verify_ssl_) {
 #ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
       cfg.crt_bundle_attach = esp_crt_bundle_attach;
+#else
+      ESP_LOGE(TAG, "verify_ssl is on but the certificate bundle is not compiled in");
 #endif
     } else {
       cfg.crt_bundle_attach = nullptr;
