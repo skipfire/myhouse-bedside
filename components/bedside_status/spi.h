@@ -6,6 +6,8 @@
 
 // Runtime GPIO numbers for CrowPanel 5.79" (Elecrow sample uses bit-bang SPI).
 // Set before EPD_GPIOInit() (BedsideStatus copies YAML pins into these).
+// Macro names are EPD_PIN_* (not bare SCK/CS/BUSY...): ESP-IDF 5.5 headers use those
+// identifiers (e.g. the BUSY enum in esp32s3/rom/ets_sys.h), and a bare #define clobbers them.
 extern int elecrow579_pin_sck;
 extern int elecrow579_pin_mosi;
 extern int elecrow579_pin_res;
@@ -13,27 +15,27 @@ extern int elecrow579_pin_dc;
 extern int elecrow579_pin_cs;
 extern int elecrow579_pin_busy;
 
-#define SCK elecrow579_pin_sck
-#define MOSI elecrow579_pin_mosi
-#define RES elecrow579_pin_res
-#define DC elecrow579_pin_dc
-#define CS elecrow579_pin_cs
-#define BUSY elecrow579_pin_busy
+#define EPD_PIN_SCK elecrow579_pin_sck
+#define EPD_PIN_MOSI elecrow579_pin_mosi
+#define EPD_PIN_RES elecrow579_pin_res
+#define EPD_PIN_DC elecrow579_pin_dc
+#define EPD_PIN_CS elecrow579_pin_cs
+#define EPD_PIN_BUSY elecrow579_pin_busy
 
-#define EPD_SCK_Clr() gpio_set_level((gpio_num_t) (SCK), 0)
-#define EPD_SCK_Set() gpio_set_level((gpio_num_t) (SCK), 1)
+#define EPD_SCK_Clr() gpio_set_level((gpio_num_t) (EPD_PIN_SCK), 0)
+#define EPD_SCK_Set() gpio_set_level((gpio_num_t) (EPD_PIN_SCK), 1)
 
-#define EPD_MOSI_Clr() gpio_set_level((gpio_num_t) (MOSI), 0)
-#define EPD_MOSI_Set() gpio_set_level((gpio_num_t) (MOSI), 1)
+#define EPD_MOSI_Clr() gpio_set_level((gpio_num_t) (EPD_PIN_MOSI), 0)
+#define EPD_MOSI_Set() gpio_set_level((gpio_num_t) (EPD_PIN_MOSI), 1)
 
-#define EPD_RES_Clr() gpio_set_level((gpio_num_t) (RES), 0)
-#define EPD_RES_Set() gpio_set_level((gpio_num_t) (RES), 1)
+#define EPD_RES_Clr() gpio_set_level((gpio_num_t) (EPD_PIN_RES), 0)
+#define EPD_RES_Set() gpio_set_level((gpio_num_t) (EPD_PIN_RES), 1)
 
-#define EPD_DC_Clr() gpio_set_level((gpio_num_t) (DC), 0)
-#define EPD_DC_Set() gpio_set_level((gpio_num_t) (DC), 1)
+#define EPD_DC_Clr() gpio_set_level((gpio_num_t) (EPD_PIN_DC), 0)
+#define EPD_DC_Set() gpio_set_level((gpio_num_t) (EPD_PIN_DC), 1)
 
-#define EPD_CS_Clr() gpio_set_level((gpio_num_t) (CS), 0)
-#define EPD_CS_Set() gpio_set_level((gpio_num_t) (CS), 1)
+#define EPD_CS_Clr() gpio_set_level((gpio_num_t) (EPD_PIN_CS), 0)
+#define EPD_CS_Set() gpio_set_level((gpio_num_t) (EPD_PIN_CS), 1)
 
 #define EPD_ReadBUSY bedside_epd_read_busy_level()
 
@@ -41,7 +43,7 @@ extern int elecrow579_pin_busy;
 extern "C" {
 #endif
 
-/** If set, EPD_READBUSY() uses this (e.g. ESPHome GPIOPin); else gpio_get_level(BUSY). */
+/** If set, EPD_READBUSY() uses this (e.g. ESPHome GPIOPin); else gpio_get_level(EPD_PIN_BUSY). */
 typedef int (*bedside_epd_busy_read_fn)(void);
 void bedside_epd_set_busy_read_fn(bedside_epd_busy_read_fn fn);
 int bedside_epd_read_busy_level(void);

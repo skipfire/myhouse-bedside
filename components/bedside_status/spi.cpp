@@ -8,7 +8,7 @@ int bedside_epd_read_busy_level(void) {
   if (g_bedside_epd_busy_read != nullptr) {
     return g_bedside_epd_busy_read();
   }
-  const gpio_num_t g = static_cast<gpio_num_t>(BUSY);
+  const gpio_num_t g = static_cast<gpio_num_t>(EPD_PIN_BUSY);
   if (!GPIO_IS_VALID_GPIO(g)) {
     return 0;
   }
@@ -27,12 +27,12 @@ static void configure_input(int pin) {
 }
 
 void EPD_GPIOInit(void) {
-  configure_output(SCK);
-  configure_output(MOSI);
-  configure_output(RES);
-  configure_output(DC);
-  configure_output(CS);
-  configure_input(BUSY);
+  configure_output(EPD_PIN_SCK);
+  configure_output(EPD_PIN_MOSI);
+  configure_output(EPD_PIN_RES);
+  configure_output(EPD_PIN_DC);
+  configure_output(EPD_PIN_CS);
+  configure_input(EPD_PIN_BUSY);
 }
 
 void EPD_WR_Bus(uint8_t dat) {
